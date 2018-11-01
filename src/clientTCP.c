@@ -118,7 +118,7 @@ int  connexion(int port)
           perror("recv()");
           exit (-1);
         }
-        else {printf(" %s", buffer_message );}
+        else {printf(": %s", buffer_message );}
 
       }
     }
