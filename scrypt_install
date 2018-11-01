@@ -1,0 +1,17 @@
+#!/bin/sh
+# Fichier "script_install"
+
+#install sqlite3
+sudo apt install sqlite3
+#install libsqlite3-devo pour récupérer le .h
+sudo apt install libsqlite3-dev
+# install ncurses 
+sudo apt install libncurses5-dev
+
+sudo apt install libsdl2-image-dev
+
+sudo apt install libsdl2-image-2.0-0 
+
+sudo apt install libsdl2-dev
+
+sudo apt-get install libsdl2-2.0
