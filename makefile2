@@ -1,0 +1,20 @@
+
+
+
+
+server: login.o serveurDame.o SQLite.o
+	gcc -o server serveurDame.o login.o SQLite.o -lpthread -lsqlite3
+
+login.o: src/login.c src/login.h
+	gcc -c -lncurses src/login.c
+serveurDame.o: src/serveurDame.c src/serveurDame.h
+	gcc -c src/serveurDame.c -lpthread
+
+# log: login.o SQLite.o
+# 	gcc -o log SQLite.o login.o -l sqlite3 -lncurses
+
+SQLite.o: src/SQLite.c src/SQLite.h
+	gcc -c src/SQLite.c
+
+# login.o: src/login.c src/login.h
+	# 	gcc -c -lncurses src/login.c

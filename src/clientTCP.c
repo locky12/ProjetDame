@@ -8,7 +8,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-
+#include "login.h"
 
 
 #define TAILLE_SAISIE 500
@@ -84,13 +84,17 @@ int  connexion(int port)
     , adresse_serveur.sin_port);
     return socket_connexion;
   }
-  void client(int port)
+  void client(int port, char * pseudo, char * pwd, int observer, int inscription)
   {
     ssize_t taille_recue;
     char buffer_message[200];
     fd_set rd;
     char buffer_saisie[200];
+
+
     int socket_connexion = connexion(port);
+    puts("avant co client");
+    connexion_client(socket_connexion, pseudo, pwd, observer,inscription);
     while(1)
     {
 
@@ -130,10 +134,11 @@ int  connexion(int port)
 
   int main (int argc, char **argv)
   {
-    if(argc != 2) {
-      printf("Le port doit etre passer en parametre");
+    if(argc != 6) {
+      printf("port pseudo pwd (joueur = 1 / observateur = 2) _ 1 pour inscription / 2 sinon ");
+      exit(1);
     }
-    client(atoi(argv[1]));
+    client(atoi(argv[1]), argv[2], argv[3], atoi(argv[4]), atoi(argv[5]));
 
     return 0;
   }
