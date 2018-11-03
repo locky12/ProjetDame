@@ -2,35 +2,81 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+//#include "deplacement.h"
+#include "sdl2.h"
  //#include "SDL2/SDL_Image.h"
 //#include <SDL/SDL_image.h>
 
 #define SIZE_DAMIER 10
 #define SIZE_CARREAU 80
 
+#define VIDE 0
+#define PION 1
+#define REINE 2
+#define MULTIPLICATEUR_JOUEUR 10
 
-typedef struct Move {
-  int position[2];
-  int newPosition[2];
-}Move;
 
+/*
 typedef struct Damier {
   int pion;
   SDL_Rect cases;
-}Damier;
+}Damier;*/
+// varaible global
+int NEW_TEXTURE = 0;
 
-void reset_st_move (Move * move);
-int  move_pion (SDL_Event event, Damier damier[10][10], Move *move);
-void event_click (SDL_Renderer *renderer, SDL_Event event, Damier damier[10][10], Move *move);
-int select_pion (SDL_Event event, Damier damier[10][10], Move *move);
-int control_position_pion (Damier damier[10][10], Move *move) ;
-int control_position_empty (Damier damier[10][10], Move *move) ;
-void changeposition (Damier damier[10][10], Move *move);
-void init_game (Damier damier[10][10]);
-void place_tile (Damier damier[10][10]);
-void print_picture (SDL_Renderer *renderer, char * pathPicture, SDL_Rect cases);
 
-enum {EMPTY, PION_W, PION_B, QUEEN_W, QUEEN_B};
+
+
+
+// void afficheConnection (SDL_Renderer * renderer) {
+//   puts("a");
+//   int h1 = 0, w1 = 0, h2 = 200, w2 =200;
+//   char str[1000];
+//   int ch, n = 0;
+//   SDL_Color color = { 255, 255, 255 };
+//   TTF_Font * police;
+//   puts("a");
+//   police = TTF_OpenFont("../fonts/arial.ttf", 25);
+//   if(police == NULL) {
+//     printf("%s\n","police null" );
+//   }
+//   puts("a");
+//   SDL_Surface * surface = TTF_RenderText_Solid(police,"hello",color);
+//   SDL_Texture * texture = SDL_CreateTextureFromSurface(renderer,surface);
+//   SDL_QueryTexture(texture,NULL, NULL,&w2,&h2);
+//   SDL_Rect rect1 = {w2 ,h2, 100, 100 };
+//   SDL_Surface * surface2;
+//   SDL_Texture * texture2;
+//   //SDL_QueryTexture(texture,NULL, NULL,&w2,&h2);
+//   SDL_Rect rect2 = { 130, 100, 130, 100 };
+//   SDL_RenderCopy(renderer,texture,NULL,&rect1);
+//   while (1) {
+//   while ((ch = getchar()) != EOF && n < 1000 ) {
+//     printf("%s\n","dans la boucle" );
+//     printf("%c\n",ch );
+//     str[n] = ch;
+//     ++n;
+//     surface2 = TTF_RenderText_Solid(police,str,color);
+//     texture2 = SDL_CreateTextureFromSurface(renderer,surface2);
+//     SDL_RenderCopy(renderer,texture2,NULL,&rect2);
+//     SDL_RenderPresent(renderer);
+//   }
+// //
+// // }
+//
+//
+//
+//   //SDL_RenderCopy(renderer,texture2,NULL,&rect2);
+//   puts("a");
+//   SDL_RenderPresent(renderer);
+//   puts("a");
+//   //message = TTF_RenderText_Solid( police, "Test pour sdl_ttf", textColor );
+//   //apply_surface( 0, 200, message, screen );
+//   SDL_Delay(10000);
+// }
+
+
 void affichermatrice (Damier  damier[10][10]) {
   puts("affiche damier");
   for (int  i = 0; i < 10; i++) {
@@ -50,20 +96,20 @@ void init_game (Damier damier[10][10]) {
       if((i+j)%2 == 0) {
         if(i < 4){
 
-          damier[i][j].pion = PION_W;
+          damier[i][j].pion = 2 * MULTIPLICATEUR_JOUEUR + PION;
         }
         else if (i > 5){
 
-          damier[i][j].pion = PION_B;
+          damier[i][j].pion = 1 * MULTIPLICATEUR_JOUEUR + REINE;
 
         }
         else {
-          damier[i][j].pion = EMPTY;
+          damier[i][j].pion = VIDE;
         }
       }
       else {
 
-        damier[i][j].pion = EMPTY;
+        damier[i][j].pion = VIDE;
       }
     }
   }
@@ -122,13 +168,25 @@ Damier ** allocDamier () {
 /*********************** Affiche une image  ******************************/
 /** Prend en parametre, un renderer, le chemin de l'image et ça position */
 /*************************************************************************/
-void print_picture (SDL_Renderer *renderer, char * pathPicture, SDL_Rect cases) {
+SDL_Texture ** create_texture (SDL_Renderer *renderer, SDL_Texture ** arrayTexture) {
+  arrayTexture = malloc(4 * sizeof(arrayTexture));
 
-  SDL_Surface* picture = IMG_Load(pathPicture);
-  SDL_Texture* myPicture = SDL_CreateTextureFromSurface(renderer,picture);
-  SDL_QueryTexture(myPicture, NULL, NULL, &cases.w, &cases.h);
-  SDL_RenderCopy(renderer,myPicture,NULL,&cases);
-  SDL_DestroyTexture(myPicture);
+    SDL_Surface* picturePW = IMG_Load("../picture/pionBlanc.png");
+    SDL_Surface* picturePB = IMG_Load("../picture/pionNoir.png");
+    SDL_Surface* pictureLW = IMG_Load("../picture/queenW.png");
+    SDL_Surface* pictureLB = IMG_Load("../picture/quennB.png");
+
+    arrayTexture[TEXTURE_PW] = SDL_CreateTextureFromSurface(renderer,picturePW);
+    arrayTexture[TEXTURE_PB] = SDL_CreateTextureFromSurface(renderer,picturePB);
+    arrayTexture[TEXTURE_LW] = SDL_CreateTextureFromSurface(renderer,pictureLW);
+    arrayTexture[TEXTURE_LB] = SDL_CreateTextureFromSurface(renderer,pictureLB);
+
+    return arrayTexture;
+  }
+void print_picture (SDL_Renderer *renderer,SDL_Texture ** arrayTexture, int enumTexture, SDL_Rect cases) {
+  SDL_QueryTexture(arrayTexture[enumTexture], NULL, NULL, &cases.w, &cases.h);
+  SDL_RenderCopy(renderer, arrayTexture[enumTexture],NULL,&cases);
+  //SDL_DestroyTexture(myPicture);
 }
 /**************************************************************/
 /************** Affiche un carreau noir ***********************/
@@ -154,12 +212,12 @@ void print_blue_tile (SDL_Renderer * renderer, SDL_Rect * rect) {
 /**************************************************************/
 /********************* Affiche le damier **********************/
 /**************************************************************/
-void print_damier (SDL_Renderer *renderer, Damier  damier[10][10]) {
+void print_damier (SDL_Renderer *renderer,SDL_Texture ** arrayTexture, Damier  damier[10][10]) {
   for (int  i = 0; i < SIZE_DAMIER; i++) {
     for (int j = 0; j < SIZE_DAMIER; j++) {
       SDL_Rect * cs = &damier[i][j].cases;
       switch (damier[i][j].pion) {
-        case EMPTY :
+        case VIDE :
           if((i+j)%2 == 0 ) {
             print_black_tile(renderer,cs);
           }
@@ -167,17 +225,17 @@ void print_damier (SDL_Renderer *renderer, Damier  damier[10][10]) {
             print_white_tile(renderer,cs);
           }
           break;
-        case PION_W :
-          print_picture(renderer,"../picture/pionBlanc.png",damier[i][j].cases);
+        case (1 * MULTIPLICATEUR_JOUEUR + PION) :
+          print_picture(renderer,arrayTexture, TEXTURE_PW,damier[i][j].cases);
           break;
-        case PION_B :
-          print_picture(renderer,"../picture/pionNoir.png",damier[i][j].cases);
+        case (2 * MULTIPLICATEUR_JOUEUR + PION) :
+          print_picture(renderer,arrayTexture,TEXTURE_PB,damier[i][j].cases);
           break;
-        case QUEEN_W :
-          print_picture(renderer,"../picture/queenW.png",damier[i][j].cases);
+        case (1 * MULTIPLICATEUR_JOUEUR + REINE) :
+          print_picture(renderer,arrayTexture,TEXTURE_LW,damier[i][j].cases);
           break;
-        case QUEEN_B :
-          print_picture(renderer,"../picture/quennB.png",damier[i][j].cases);
+        case (2 * MULTIPLICATEUR_JOUEUR + REINE) :
+          print_picture(renderer,arrayTexture,TEXTURE_LB,damier[i][j].cases);
           break;
         default :
           print_blue_tile(renderer,cs);
@@ -186,23 +244,28 @@ void print_damier (SDL_Renderer *renderer, Damier  damier[10][10]) {
     }
   }
 }
+
 /**************************************************************/
 
-int main(int argc, char** argv)
-{
+// int main(int argc, char** argv)
+// {
+//   SDL_Renderer *renderer;
+//   SDL_Window * window;
+//     window = init_view ();
+//    play_view (window);
+// }
 
+ SDL_Window * init_view () {
   // bug sans problème de pilote graphique
   // désactive accélération matériel
   SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
   SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, 0);
 
   //Variable :
-  SDL_Event event;
-  SDL_bool quit = SDL_FALSE;
+
   SDL_Window * window;
-  SDL_Renderer *renderer, *rendererW;
-  Damier damier[10][10];
-  Move * move = malloc(sizeof(move));
+  //SDL_Renderer *renderer, *rendererW;
+
 
   // initialisation;
 
@@ -211,59 +274,77 @@ int main(int argc, char** argv)
   if(SDL_VideoInit(NULL) < 0)
   {
       printf("Erreur d'initialisation de la SDL : %s",SDL_GetError());
-      return EXIT_FAILURE;
+    //  return EXIT_FAILURE;
+  }
+  if(TTF_Init() < 0 ){
+    printf("Erreur d'initiaisation de la TTF : %s\n", TTF_GetError());
   }
   window = SDL_CreateWindow("Une fenetre SDL" , SDL_WINDOWPOS_CENTERED , SDL_WINDOWPOS_CENTERED , 800 , 800 , 0);
   if(window == NULL)
   {
       printf("Erreur lors de la creation d'une fenetre : %s",SDL_GetError());
-      return EXIT_FAILURE;
+      //return EXIT_FAILURE;
   }
+  return window;
+  //SDL_Delay(10000);
+}
+void play_view (SDL_Window * window) {
+  SDL_Event event;
+  SDL_bool quit = SDL_FALSE;
+  SDL_Renderer *renderer;
+  //damier = allocDamier();
+  Damier damier[10][10];
+  Move * move = malloc(sizeof(move));
+  init_game(damier);
+  place_tile (damier);
+  affichermatrice(damier);
+  SDL_Texture **arrayTexture;
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if(renderer == NULL)
   {
       printf("Erreur lors de la creation d'un renderer : %s",SDL_GetError());
-      return EXIT_FAILURE;
+      return;
   }
-
-  //damier = allocDamier();
-  init_game(damier);
-  place_tile (damier);
-  affichermatrice(damier);
-
+  arrayTexture = create_texture (renderer, arrayTexture);
 
 while(!quit)
 {
 
     //SDL_Delay(20);
+  //  printf("je suis la \n" );
 
-    print_damier(renderer,damier);
-    SDL_RenderPresent(renderer);
+  print_damier(renderer, arrayTexture, damier);
+  SDL_RenderPresent(renderer);
     SDL_WaitEvent(&event);
-    //test = 0;
-    if(event.type == SDL_QUIT){
-        quit = SDL_TRUE;
-      }
-    if(event.type == SDL_MOUSEBUTTONDOWN){
-      printf("%s\n","passe" );
-
-        event_click(renderer,event,damier,move);
-
-    }
+    quit = exit_client (event,quit);
+    eventClient(event, renderer, damier, move);
 
 
 }
-SDL_DestroyWindow(window);
+//SDL_DestroyWindow(window);
 SDL_Quit();
 }
 
+SDL_bool exit_client (SDL_Event event, SDL_bool  quit){
+  if(event.type == SDL_QUIT){
+      return SDL_TRUE;
+    }
+    return SDL_FALSE;
+}
+void eventClient(SDL_Event event, SDL_Renderer * renderer, Damier damier [10][10], Move * move){
 
+  if(event.type == SDL_MOUSEBUTTONDOWN){
+    printf("%s\n","passe" );
+
+      event_click(renderer,event,damier,move);
+  }
+}
 /**************************************************************/
 /**************** change la postion d'un pion *****************/
 /**************************************************************/
 void change_position (Damier damier[10][10], Move *move) {
   damier[move->newPosition[0]][move->newPosition[1]].pion = damier[move->position[0]][move->position[1]].pion;
-  damier[move->position[0]][move->position[1]].pion = EMPTY;
+  damier[move->position[0]][move->position[1]].pion = VIDE;
   reset_st_move(move);
 }
 /**************************************************************/
@@ -318,7 +399,7 @@ int  move_pion (SDL_Event event, Damier damier[10][10], Move *move) {
   if(control_position_empty(damier, move)) {
     if(move->position[0] != -1 && move->position[1] != -1) {
 
-
+      prisePion(damier, 2, move->position[0], move->position[1], move->newPosition[0], move->newPosition[1], move->newPosition[0]-move->position[0], move->newPosition[1]-move->position[1]);
       change_position(damier, move);
       return 1;
     }
@@ -346,6 +427,12 @@ int control_position_pion (Damier damier[10][10], Move *move) {
   }
   return 0;
 }
+
+
+
+
+
+
 /**************************************************************/
 /*********Controle si le pion selectionner est vide *********/
 /**************************************************************/
@@ -357,7 +444,10 @@ int control_position_empty (Damier damier[10][10], Move *move){
               move->newPosition[0] < SIZE_DAMIER              &&
               move->newPosition[1] >= 0                       &&
               move->newPosition[1] < SIZE_DAMIER              &&
-              damier[move->newPosition[0]][move->newPosition[1]].pion == 0) {
+              deplacementValide(damier, 2, move->position[0], move->position[1], move->newPosition[0], move->newPosition[1]) &&
+              damier[move->newPosition[0]][move->newPosition[1]].pion == 0)
+  {
+
     return 1;
   }
   puts("test vide echec");

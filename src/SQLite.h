@@ -12,7 +12,7 @@ void write_data_player (sqlite3 * db, char * pseudo, char * pwd);
 // retourne le mdp par rapport au pseudo
 char * retrieve_pwd (sqlite3 *db,char * pseudo);
 
-int connexion_client (int sock, char *pseudo, char *pwd, int observer, int inscription);
+
 
 /********* TEST ********/
 
