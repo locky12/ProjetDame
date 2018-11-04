@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
+// #include <SDL2/SDL_ttf.h>
 //#include "deplacement.h"
 #include "sdl2.h"
+
  //#include "SDL2/SDL_Image.h"
 //#include <SDL/SDL_image.h>
 
@@ -16,13 +17,6 @@
 #define REINE 2
 #define MULTIPLICATEUR_JOUEUR 10
 
-
-/*
-typedef struct Damier {
-  int pion;
-  SDL_Rect cases;
-}Damier;*/
-// varaible global
 int NEW_TEXTURE = 0;
 
 
@@ -100,7 +94,7 @@ void init_game (Damier damier[10][10]) {
         }
         else if (i > 5){
 
-          damier[i][j].pion = 1 * MULTIPLICATEUR_JOUEUR + REINE;
+          damier[i][j].pion = 1 * MULTIPLICATEUR_JOUEUR + PION;
 
         }
         else {
@@ -174,7 +168,10 @@ SDL_Texture ** create_texture (SDL_Renderer *renderer, SDL_Texture ** arrayTextu
     SDL_Surface* picturePW = IMG_Load("../picture/pionBlanc.png");
     SDL_Surface* picturePB = IMG_Load("../picture/pionNoir.png");
     SDL_Surface* pictureLW = IMG_Load("../picture/queenW.png");
-    SDL_Surface* pictureLB = IMG_Load("../picture/quennB.png");
+    SDL_Surface* pictureLB = IMG_Load("../picture/queenB.png");
+    if(pictureLW == NULL) {
+      printf("texture null\n" );
+    }
 
     arrayTexture[TEXTURE_PW] = SDL_CreateTextureFromSurface(renderer,picturePW);
     arrayTexture[TEXTURE_PB] = SDL_CreateTextureFromSurface(renderer,picturePB);
@@ -276,9 +273,9 @@ void print_damier (SDL_Renderer *renderer,SDL_Texture ** arrayTexture, Damier  d
       printf("Erreur d'initialisation de la SDL : %s",SDL_GetError());
     //  return EXIT_FAILURE;
   }
-  if(TTF_Init() < 0 ){
-    printf("Erreur d'initiaisation de la TTF : %s\n", TTF_GetError());
-  }
+  // if(TTF_Init() < 0 ){
+  //   printf("Erreur d'initiaisation de la TTF : %s\n", TTF_GetError());
+  // }
   window = SDL_CreateWindow("Une fenetre SDL" , SDL_WINDOWPOS_CENTERED , SDL_WINDOWPOS_CENTERED , 800 , 800 , 0);
   if(window == NULL)
   {
@@ -288,42 +285,52 @@ void print_damier (SDL_Renderer *renderer,SDL_Texture ** arrayTexture, Damier  d
   return window;
   //SDL_Delay(10000);
 }
-void play_view (SDL_Window * window) {
-  SDL_Event event;
-  SDL_bool quit = SDL_FALSE;
+SDL_Renderer *create_renderer (SDL_Window *window) {
   SDL_Renderer *renderer;
-  //damier = allocDamier();
-  Damier damier[10][10];
-  Move * move = malloc(sizeof(move));
-  init_game(damier);
-  place_tile (damier);
-  affichermatrice(damier);
-  SDL_Texture **arrayTexture;
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if(renderer == NULL)
   {
       printf("Erreur lors de la creation d'un renderer : %s",SDL_GetError());
-      return;
+      exit(1);
   }
-  arrayTexture = create_texture (renderer, arrayTexture);
-
-while(!quit)
-{
-
-    //SDL_Delay(20);
-  //  printf("je suis la \n" );
-
-  print_damier(renderer, arrayTexture, damier);
-  SDL_RenderPresent(renderer);
-    SDL_WaitEvent(&event);
-    quit = exit_client (event,quit);
-    eventClient(event, renderer, damier, move);
-
-
+  return renderer;
 }
-//SDL_DestroyWindow(window);
-SDL_Quit();
-}
+// void play_view (SDL_Window * window) {
+//   SDL_Event event;
+//   SDL_bool quit = SDL_FALSE;
+//   SDL_Renderer *renderer;
+//   //damier = allocDamier();
+//   Damier damier[10][10];
+//   Move * move = malloc(sizeof(move));
+//   init_game(damier);
+//   place_tile (damier);
+//   affichermatrice(damier);
+//   SDL_Texture **arrayTexture;
+//   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+//   if(renderer == NULL)
+//   {
+//       printf("Erreur lors de la creation d'un renderer : %s",SDL_GetError());
+//       return;
+//   }
+//   arrayTexture = create_texture (renderer, arrayTexture);
+//
+// while(!quit)
+// {
+//
+//     //SDL_Delay(20);
+//   //  printf("je suis la \n" );
+//
+//   print_damier(renderer, arrayTexture, damier);
+//   SDL_RenderPresent(renderer);
+//     SDL_WaitEvent(&event);
+//     quit = exit_client (event,quit);
+//     eventClient(event, renderer, damier, move,3);
+//
+//
+// }
+// //SDL_DestroyWindow(window);
+// SDL_Quit();
+// }
 
 SDL_bool exit_client (SDL_Event event, SDL_bool  quit){
   if(event.type == SDL_QUIT){
@@ -331,13 +338,17 @@ SDL_bool exit_client (SDL_Event event, SDL_bool  quit){
     }
     return SDL_FALSE;
 }
-void eventClient(SDL_Event event, SDL_Renderer * renderer, Damier damier [10][10], Move * move){
-
+int eventClient(SDL_Event event, SDL_Renderer * renderer, Damier damier [10][10], Move * move, int socket,int numberPlayer){
+  int control = 0;
   if(event.type == SDL_MOUSEBUTTONDOWN){
-    printf("%s\n","passe" );
+      control = event_click(renderer,event,damier,move,socket,numberPlayer);
+      if(control)
+      {
+        return 0;
+      }
 
-      event_click(renderer,event,damier,move);
   }
+  return 1;
 }
 /**************************************************************/
 /**************** change la postion d'un pion *****************/
@@ -345,7 +356,7 @@ void eventClient(SDL_Event event, SDL_Renderer * renderer, Damier damier [10][10
 void change_position (Damier damier[10][10], Move *move) {
   damier[move->newPosition[0]][move->newPosition[1]].pion = damier[move->position[0]][move->position[1]].pion;
   damier[move->position[0]][move->position[1]].pion = VIDE;
-  reset_st_move(move);
+
 }
 /**************************************************************/
 /**************** Efface les donnees dans move  ***************/
@@ -358,7 +369,8 @@ void reset_st_move (Move * move){
 /**************************************************************/
 /**** verifie si evenement est un click gauche ou droit *******/
 /**************************************************************/
-void event_click (SDL_Renderer * renderer, SDL_Event event,Damier damier[10][10], Move *move) {
+int event_click (SDL_Renderer * renderer, SDL_Event event,Damier damier[10][10], Move *move, int socket,int numberPlayer) {
+  char buffer [100];
   if(event.button.button == SDL_BUTTON_LEFT){
     printf("%s\n","click gauche" );
     if (select_pion(event, damier, move )== 1){
@@ -369,10 +381,52 @@ void event_click (SDL_Renderer * renderer, SDL_Event event,Damier damier[10][10]
   }
   else if (event.button.button == SDL_BUTTON_RIGHT) {
     printf("%s\n","click droit" );
-    move_pion (event, damier, move);
+    int control = 0;
+    control = move_pion (event, damier, move, numberPlayer);
+    if (control) {
+    send_move(move, NULL, 0,3,buffer);
+    printf("%d\n",socket );
+    puts("mouvement envoyé");
+    write_serveur(socket,buffer);
+    reset_st_move(move);
+    return 1;
   }
+  }
+  return 0;
 }
+int changeDamier (int socket, Damier damier[10][10] ) {
+  puts("changeDamier()");
+  char buffer[100];
+  memset(buffer,'\0',100);
 
+  char ** result;
+  int i = 0;
+  read_serveur(socket,buffer);
+  printf("buffer : %s\n",buffer );
+  while (buffer[i++] != '\0'){
+
+    if(buffer[i] == '*'){
+    //  puts("je change");
+      buffer[i]= '\0';
+    }
+  }
+
+  printf("longeur : %ld\n",strlen(buffer) );
+  //printf("char i - 1 : %c\n",buffer[10] );
+
+  result = read_move_query(buffer);
+puts(buffer);
+
+  printf("char  :%c\n",buffer[strlen(buffer)-2]);
+  i = 0;
+  while (i != 3){
+    printf("result = %c/%c\n",result[i][0],result[i][1] );
+    i++;
+  }
+  damier[charInInt(result[1][0])][charInInt(result[1][1])].pion = damier[charInInt(result[0][0])][charInInt(result[0][1])].pion;
+  damier[charInInt(result[0][0])][charInInt(result[0][1])].pion = VIDE;
+
+}
 /**************************************************************/
 /*********Selectionne un pion si la case est pas vide *********/
 /**************************************************************/
@@ -393,14 +447,15 @@ int select_pion (SDL_Event event, Damier damier[10][10], Move *move) {
 /**************************************************************/
 /*********Déplace le pion si les condition snt remplies *********/
 /**************************************************************/
-int  move_pion (SDL_Event event, Damier damier[10][10], Move *move) {
+int  move_pion (SDL_Event event, Damier damier[10][10], Move *move, int numberPlayer) {
   move->newPosition[0] = event.motion.y/80;
   move->newPosition[1] = event.motion.x/80;
-  if(control_position_empty(damier, move)) {
+  if(control_position_empty(damier, move, numberPlayer)) {
     if(move->position[0] != -1 && move->position[1] != -1) {
 
       prisePion(damier, 2, move->position[0], move->position[1], move->newPosition[0], move->newPosition[1], move->newPosition[0]-move->position[0], move->newPosition[1]-move->position[1]);
       change_position(damier, move);
+
       return 1;
     }
   }
@@ -438,13 +493,13 @@ int control_position_pion (Damier damier[10][10], Move *move) {
 /**************************************************************/
 // TODO : manque la vérification  que la position soit correct avant de déplacer
 // TODO :
-int control_position_empty (Damier damier[10][10], Move *move){
+int control_position_empty (Damier damier[10][10], Move *move,int numberPlayer){
   printf(" new postion  = %d, %d\n",move->newPosition[0],move->newPosition[1]  );
   if (move->newPosition[0] >= 0                               &&
               move->newPosition[0] < SIZE_DAMIER              &&
               move->newPosition[1] >= 0                       &&
               move->newPosition[1] < SIZE_DAMIER              &&
-              deplacementValide(damier, 2, move->position[0], move->position[1], move->newPosition[0], move->newPosition[1]) &&
+              deplacementValide(damier, numberPlayer, move->position[0], move->position[1], move->newPosition[0], move->newPosition[1]) &&
               damier[move->newPosition[0]][move->newPosition[1]].pion == 0)
   {
 
@@ -452,4 +507,68 @@ int control_position_empty (Damier damier[10][10], Move *move){
   }
   puts("test vide echec");
   return 0;
+}
+void send_move (Move * move, int ** arrayCapture, int size,int option, char * buffer  ){
+printf("new position : %d;%d\n",move->newPosition[0],move->newPosition[1] );
+ sprintf(buffer,"%d/%d-%d/%d-%d",option,move->position[0],move->position[1],move->newPosition[0],move->newPosition[1]);
+  for (int i = 0; i < size; i++){
+    printf("%s\n","ta");
+    sprintf(buffer,"%s/%d-%d",buffer,arrayCapture[i][0],arrayCapture[i][0]);
+  }
+  sprintf(buffer,"%s/%d%c",buffer,size,'*');
+
+}
+char ** read_move_query (char * buffer){
+  int       i         = 0,
+  r         = 0,
+  count     = 0,
+  ok        = 1;
+  const int sizeAlloc = 3;
+
+  char      temp [100];
+  char ** result;
+  result = malloc((sizeAlloc + atoi(&buffer[strlen(buffer) - 1])) * sizeof(*result));
+  if(result == NULL){
+    perror("malloc()");
+    exit(1);
+  }
+
+  // printf("ant decomposition : %s\n",buffer );
+  while(ok){
+    //printf("char : %c\n",buffer[i] );
+    if(buffer[i] != '/' && buffer[i] != '\0' && buffer[i] != '-'){
+      temp[r] = buffer[i];
+      i++;
+      r++;
+    }
+    else if (buffer[i] == '/') {
+      puts("passe dans le else");
+      i++;
+      result[count] = malloc(3*sizeof(result));
+      if(result[count] == NULL){
+        perror("malloc()");
+        exit(1);
+      }
+      printf("%s\n",temp );
+      strcpy(result[count],temp);
+      count++;
+      r = 0;
+      // memset(temp,'\0',strlen(temp));
+    }
+    else if (buffer[i] == '-') {
+      char c = buffer[i+1] ;
+      printf("buffer i +1 : %c\n",c );
+      sprintf(result[count-1],"%c%c",temp[0],c);
+      i++;
+    }
+    else if (buffer[i] == '\0') {
+      ok = 0;
+    }
+
+  }
+  printf("result 3 : %c\n",result[1][1] );
+  return result;
+}
+int charInInt (char c) {
+  return c - '0';
 }

@@ -11,4 +11,5 @@ int accept_player (int socket_ecoute);
 // Permet de lier l'adresse serveur au socket d'écoute
 // retourne le socket_ecoute.
 int listen_net (int port);
+
 void server(int port);

@@ -1,2 +1,6 @@
-void write_serveur(int socket, char *buffer);
-void read_serveur(int socket, char *buffer);
+
+// #include "deplacement.h"
+
+
+
+char **read_move_query(char * buffer);

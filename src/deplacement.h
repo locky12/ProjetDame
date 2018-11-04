@@ -1,10 +1,7 @@
 
-#include <SDL2/SDL.h>
+#include "struct.h"
 
-typedef struct Damier {
-  int pion;
-  SDL_Rect cases;
-}Damier;
+
 
 int deplacementValide(Damier damier[10][10], int joueurActuel, int xDepart, int yDepart, int xArrivee, int yArrivee);
 int deplacementValidePion(Damier damier[10][10], int joueurActuel, int xDepart, int yDepart, int xArrivee, int yArrivee);

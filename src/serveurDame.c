@@ -11,6 +11,7 @@
 #include <signal.h>
 #include <fcntl.h>
 #include "login.h"
+#include "struct.h"
 
 //#include "serveurDame.h"
 
@@ -36,7 +37,8 @@ void prepare_exit_thread(Room *room);
 Player delete_player_room(Player player);
 void add_old_player (ArrayRoom *array_room, Room room);
 void reset_array_play (ArrayRoom *array_room, Room room);
-
+void send_move (Move * move, int ** arrayCapture, int size,int option, char * buffer  );
+void send_number_player (Player *list);
 int main(int argc, char **argv) {
   server(atoi(argv[1]));
   return 0;
@@ -256,6 +258,7 @@ void * room_play_thread (void * args) {
   int size = 2;
   int i;
   Room *room = args;
+  send_number_player(room-> play);
   //room-> play = args;
 
   // for (int i = 0; i < 3; i++) {
@@ -402,7 +405,7 @@ int accept_player (int socket_ecoute) {
   void send_player(int socket_player,char *buffer)
   {
     int taille_envoyee;
-    taille_envoyee = send( socket_player, buffer, strlen(buffer), 0);
+    taille_envoyee = send( socket_player, buffer, strlen(buffer)+1, 0);
     if (taille_envoyee == -1)
     {
       perror("send()");
@@ -424,4 +427,30 @@ int accept_player (int socket_ecoute) {
         send_player(list[i].socket,buffer);
       }
     }
+  }
+  // envoie le numéro du joueur 1 ou 2
+  void send_number_player (Player *list) {
+    char buffer [10];
+
+    for (int i = 0; i < 2; i++)
+    {
+      sprintf(buffer,"%d/%d",1,i+1);
+      printf("buffer ; %s\n",buffer );
+      send_player(list[i].socket,buffer);
+      memset(buffer,'\0',10);
+    }
+  }
+
+
+  void send_move (Move * move, int ** arrayCapture, int size,int option, char * buffer  ){
+    // char buffer[100] = {0};
+    printf("%s\n","je bug" );
+   sprintf(buffer,"%d/%d-%d/%d-%d",0,move->position[0],move->position[1],move->newPosition[0],move->newPosition[0]);
+    for (int i = 0; i < size; i++){
+      printf("%s\n","ta");
+      sprintf(buffer,"%s/%d-%d",buffer,arrayCapture[i][0],arrayCapture[i][0]);
+    }
+    sprintf(buffer,"%s/%d",buffer,size);
+
+
   }

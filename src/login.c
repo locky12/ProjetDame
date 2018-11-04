@@ -218,7 +218,7 @@ char * control_connect (ArrayRoom *array_room, int sock) {
     // puts("avant log player");
     sign_player(result[1],result[2]);
     sprintf(buffer,"%d/%s",1,"connect_ok");
-    send_msg(sock,buffer);
+  //  send_msg(sock,buffer);
     printf("%s\n", "connect_ok");
 
     return result[1];
@@ -226,7 +226,7 @@ char * control_connect (ArrayRoom *array_room, int sock) {
   else if (atoi(result[0])== 2) {
     sprintf(buffer,"%d/%s",2,"sign_ok");
     log_player(result[1], result[2]);
-    send_msg(sock,buffer);
+    //send_msg(sock,buffer);
     if(atoi(result[3]) == 1) {
       puts("ajout joueur");
       add_client_array (array_room,sock,result[1]);
