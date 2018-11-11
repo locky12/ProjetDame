@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <fcntl.h>
-// #include <SDL2/SDL_ttf.h>
+ #include <SDL2/SDL_ttf.h>
 //#include "deplacement.h"
 #include "sdl2.h"
 
@@ -26,52 +26,54 @@ int NEW_TEXTURE = 0;
 
 
 
-// void afficheConnection (SDL_Renderer * renderer) {
-//   puts("a");
-//   int h1 = 0, w1 = 0, h2 = 200, w2 =200;
-//   char str[1000];
-//   int ch, n = 0;
-//   SDL_Color color = { 255, 255, 255 };
-//   TTF_Font * police;
-//   puts("a");
-//   police = TTF_OpenFont("../fonts/arial.ttf", 25);
-//   if(police == NULL) {
-//     printf("%s\n","police null" );
-//   }
-//   puts("a");
-//   SDL_Surface * surface = TTF_RenderText_Solid(police,"hello",color);
-//   SDL_Texture * texture = SDL_CreateTextureFromSurface(renderer,surface);
-//   SDL_QueryTexture(texture,NULL, NULL,&w2,&h2);
-//   SDL_Rect rect1 = {w2 ,h2, 100, 100 };
-//   SDL_Surface * surface2;
-//   SDL_Texture * texture2;
-//   //SDL_QueryTexture(texture,NULL, NULL,&w2,&h2);
-//   SDL_Rect rect2 = { 130, 100, 130, 100 };
-//   SDL_RenderCopy(renderer,texture,NULL,&rect1);
-//   while (1) {
-//   while ((ch = getchar()) != EOF && n < 1000 ) {
-//     printf("%s\n","dans la boucle" );
-//     printf("%c\n",ch );
-//     str[n] = ch;
-//     ++n;
-//     surface2 = TTF_RenderText_Solid(police,str,color);
-//     texture2 = SDL_CreateTextureFromSurface(renderer,surface2);
-//     SDL_RenderCopy(renderer,texture2,NULL,&rect2);
-//     SDL_RenderPresent(renderer);
-//   }
-// //
-// // }
-//
-//
-//
-//   //SDL_RenderCopy(renderer,texture2,NULL,&rect2);
-//   puts("a");
-//   SDL_RenderPresent(renderer);
-//   puts("a");
-//   //message = TTF_RenderText_Solid( police, "Test pour sdl_ttf", textColor );
-//   //apply_surface( 0, 200, message, screen );
-//   SDL_Delay(10000);
-// }
+void afficheConnection (SDL_Renderer * renderer) {
+  puts("a");
+  int h1 = 0, w1 = 0, h2 = 200, w2 =200;
+  char str[1000];
+  int ch, n = 0;
+  SDL_Color color = { 255, 255, 255 };
+  TTF_Font * police;
+  puts("a");
+  police = TTF_OpenFont("arial.ttf", 25);
+  if(police == NULL) {
+    printf("%s\n","police nullle" );
+  }
+  puts("a");
+  SDL_Surface * surface = TTF_RenderText_Solid(police,"hello",color);
+  SDL_Texture * texture = SDL_CreateTextureFromSurface(renderer,surface);
+  SDL_QueryTexture(texture,NULL, NULL,&w2,&h2);
+  SDL_Rect rect1 = {w2 ,h2, 100, 100 };
+  SDL_Surface * surface2;
+  SDL_Texture * texture2;
+  //SDL_QueryTexture(texture,NULL, NULL,&w2,&h2);
+  SDL_Rect rect2 = { 0, 0, 200, 200 };
+  SDL_RenderCopy(renderer,texture,NULL,&rect1);
+  while (1) {
+    n=0;
+  while ((ch = getchar()) != EOF && n < 1000 ) {
+    printf("%s\n","dans la boucle" );
+    printf("%c\n",ch );
+    str[n] = ch;
+    ++n;
+    surface2 = TTF_RenderText_Solid(police,str,color);
+    texture2 = SDL_CreateTextureFromSurface(renderer,surface2);
+    SDL_RenderCopy(renderer,texture2,NULL,&rect2);
+    SDL_RenderPresent(renderer);
+  //  SDL_Flip(surface2);
+  }
+
+}
+
+
+
+  //SDL_RenderCopy(renderer,texture2,NULL,&rect2);
+  puts("a");
+  SDL_RenderPresent(renderer);
+  puts("a");
+  //message = TTF_RenderText_Solid( police, "Test pour sdl_ttf", textColor );
+  //apply_surface( 0, 200, message, screen );
+  SDL_Delay(10000);
+}
 
 
 void affichermatrice (Damier  damier[10][10]) {
@@ -290,9 +292,9 @@ void print_damier (SDL_Renderer *renderer,SDL_Texture ** arrayTexture, Damier  d
       printf("Erreur d'initialisation de la SDL : %s",SDL_GetError());
     //  return EXIT_FAILURE;
   }
-  // if(TTF_Init() < 0 ){
-  //   printf("Erreur d'initiaisation de la TTF : %s\n", TTF_GetError());
-  // }
+  if(TTF_Init() < 0 ){
+    printf("Erreur d'initiaisation de la TTF : %s\n", TTF_GetError());
+  }
   window = SDL_CreateWindow("Une fenetre SDL" , SDL_WINDOWPOS_CENTERED , SDL_WINDOWPOS_CENTERED , 800 , 800 , 0);
   if(window == NULL)
   {

@@ -284,19 +284,41 @@ int add_observer_array (ArrayRoom * array_room,int sock ,char* pseudo){
   }
   puts("fin _add_observer_array");
 }
+// int add_client_array (ArrayRoom * array_room,int sock ,char* pseudo){
+//   puts("add_client_array");
+//   for (int i = 0; i < 10; i++){
+//     if(array_room->array[i].sizePlay < 2) {
+//       printf("insertion joueur %d ++++++++++++++++++++++++++++++++++\n",i );
+//     array_room->array[i].play[array_room->array[i].sizePlay]  = add_client(array_room->array[i].play[array_room->array[i].sizePlay], sock, pseudo,1);
+//       array_room->array[i].sizePlay++;
+//       printf("***************  %d ******************\n",array_room->array[i].sizePlay );
+//       break;
+//     }
+//     else if ( (array_room->array[i].sizePlay < 3 &&array_room->array[i].haveObserver == 1) ){
+//       array_room->array[i].play[array_room->array[1].sizePlay]  = add_client(array_room->array[i].play[array_room->array[i].sizePlay], sock, pseudo,1);
+//         array_room->array[i].sizePlay++;
+//     }
+//   }
+// }
+
 int add_client_array (ArrayRoom * array_room,int sock ,char* pseudo){
   puts("add_client_array");
+  int control = 0;
   for (int i = 0; i < 10; i++){
-    if(array_room->array[i].sizePlay < 2) {
-      printf("insertion joueur %d ++++++++++++++++++++++++++++++++++\n",i );
-    array_room->array[i].play[array_room->array[i].sizePlay]  = add_client(array_room->array[i].play[array_room->array[i].sizePlay], sock, pseudo,1);
-      array_room->array[i].sizePlay++;
-      printf("***************  %d ******************\n",array_room->array[i].sizePlay );
-      break;
+    if(array_room->array[i].inGame == 0){
+      for(int j = 0; j < 2; j++){
+
+        if(array_room->array[i].play[j].observer == 0){
+          printf("++++ insertion en i = %d, en j = %d ++++",i,j);
+          array_room->array[i].play[j] = add_client(array_room->array[i].play[j], sock, pseudo,1);
+          array_room->array[i].sizePlay++;
+          control = 1;
+          break;
+        }
+      }
     }
-    else if ( (array_room->array[i].sizePlay < 3 &&array_room->array[i].haveObserver == 1) ){
-      array_room->array[i].play[array_room->array[1].sizePlay]  = add_client(array_room->array[i].play[array_room->array[i].sizePlay], sock, pseudo,1);
-        array_room->array[i].sizePlay++;
+    if(control){
+      break;
     }
   }
 }

@@ -3,7 +3,7 @@ all: client
 # jeu_de_dame: main.o affichage.o deplacement.o
 	# gcc -o jeu_de_dame main.o affichage.o deplacement.o `sdl2-config --cflags --libs`
 client: sdl2.o affichage.o deplacement.o clientTCP.o login.o SQLite.o
-	gcc -o client sdl2.o affichage.o deplacement.o clientTCP.o login.o SQLite.o  `sdl2-config --cflags --libs` -lSDL2_image -lsqlite3 -lpthread
+	gcc -o client sdl2.o affichage.o deplacement.o clientTCP.o login.o SQLite.o  `sdl2-config --cflags --libs` -lSDL2_image -lsqlite3 -lpthread -lSDL2_ttf
 
 sdl2.o: sdl2.c sdl2.h
 	gcc -c sdl2.c `sdl2-config --cflags --libs` -lSDL2_image
