@@ -1,7 +1,7 @@
 
 #include "communication.h"
 
-enum {TEXTURE_PW, TEXTURE_PB, TEXTURE_LW, TEXTURE_LB};
+enum {TEXTURE_PW, TEXTURE_PB, TEXTURE_LW, TEXTURE_LB,TEXTURE_PRIS};
 
 void reset_st_move (Move * move);
 int  move_pion (SDL_Event event, Damier damier[10][10], Move *move, int numberPlayer);
@@ -26,7 +26,7 @@ int charInInt (char c);
 char * recv_msg_server (int socket, char * buffer );
 int control_recv_msg(char * buffer);
 void print_case_damier (SDL_Renderer *renderer,SDL_Texture ** arrayTexture, Damier  damier[10][10], int i, int j);
-
+void freeTexture (SDL_Texture ** arrayTexture);
 SDL_Renderer *create_renderer (SDL_Window *window);
 /*************************************************************************************************/
 void write_serveur(int socket, char *buffer);

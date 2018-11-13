@@ -32,6 +32,7 @@ struct Game {
   int change;
   int roundPlayer;
   int deletePion;
+  int end;
   //Damier damier[10][10];
 };
 
@@ -124,8 +125,9 @@ int  connexion(int port)
     Move * move = malloc(sizeof(move));
     Game * game = NULL;
     int socket_connexion = chooseMod(port);
-    while (inPlay && !quit){
+    while (!quit){
       if (observer == 1) {
+        inPlay = 1;
       wait_game(socket_connexion);
     }
       // initialisation du damier
@@ -158,7 +160,7 @@ int  connexion(int port)
       pthread_create(&thread, NULL, game_play, game);
 
 
-      while (!quit)
+      while (!quit&& inPlay)
       {
         // puts("SDL_WaitEvent00");
         SDL_PollEvent(&event);
@@ -189,13 +191,21 @@ int  connexion(int port)
           }
 
         }
-
+        if(game->end == 1){
+          inPlay = 0;
+          game->end = 0;
+          printf("socket après fermeture du threads : %d \n",game->socket );
+        }
 
       }
 
-    close(socket_connexion);
-
+        SDL_DestroyRenderer(renderer);
+       SDL_DestroyWindow(window);
   }
+  freeTexture(arrayTexture);
+  free(move);
+  free(game);
+  close(socket_connexion);
 }
   void * game_play (void * arg) {
     int controlChange;
@@ -223,8 +233,11 @@ int  connexion(int port)
       }
       else if (controlChange == 2)
       {
-        game->deletePion = 1;
+        game->end = 1;
+        printf("Fin du thread\n");
+        pthread_exit(NULL);
       }
+
     }
   }
   /*Fonction qui controle la connexion des joueurs  */
@@ -232,6 +245,7 @@ int  connexion(int port)
   /* Elle effectue une boucle jusqu'a recevoir un message de debut de jeu */
   /* Elle permet aussi de verifier que le client est toujours connecté */
   void wait_game (int socket){
+    puts("En attente d'une partie");
     int wait = 1;
     char buffer [100];
     while(wait){
@@ -256,7 +270,7 @@ int  connexion(int port)
     game-> numPlayer = numberPlayer;
     game->change =0;
     game->roundPlayer =0;
-    //game->deletePion =0;
+
     return game;
   }
   int chooseMod (int port) {

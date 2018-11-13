@@ -20,9 +20,10 @@
 #define VIDE 0
 #define PION 1
 #define REINE 2
+#define PRIS 3
 #define MULTIPLICATEUR_JOUEUR 10
 
-int NEW_TEXTURE = 0;
+#define SIZE_ARRAY_TEXTURE 5
 
 
 
@@ -172,17 +173,26 @@ Damier ** allocDamier () {
   puts("end allocDamier()");
   return damier;
 }
-
+/******************* Libere les textures et le tableau *******************/
+/* In : Tableau de texture ***********************************************/
+/*************************************************************************/
+void freeTexture (SDL_Texture ** arrayTexture){
+for(int i = 0; i < SIZE_ARRAY_TEXTURE; i++){
+  SDL_DestroyTexture(arrayTexture[i]);
+}
+free(arrayTexture);
+}
 /*********************** Affiche une image  ******************************/
 /** Prend en parametre, un renderer, le chemin de l'image et ça position */
 /*************************************************************************/
 SDL_Texture ** create_texture (SDL_Renderer *renderer, SDL_Texture ** arrayTexture) {
-  arrayTexture = malloc(4 * sizeof(arrayTexture));
+  arrayTexture = malloc(5 * sizeof(arrayTexture));
 
   SDL_Surface* picturePW = IMG_Load("../picture/pionBlanc.png");
   SDL_Surface* picturePB = IMG_Load("../picture/pionNoir.png");
   SDL_Surface* pictureLW = IMG_Load("../picture/queenW.png");
   SDL_Surface* pictureLB = IMG_Load("../picture/queenB.png");
+  SDL_Surface* picturePris = IMG_Load("../picture/piecePris.png");
   if(picturePB == NULL) {
     printf("texture null\n" );
   }
@@ -191,8 +201,8 @@ SDL_Texture ** create_texture (SDL_Renderer *renderer, SDL_Texture ** arrayTextu
   arrayTexture[TEXTURE_PB] = SDL_CreateTextureFromSurface(renderer,picturePB);
   arrayTexture[TEXTURE_LW] = SDL_CreateTextureFromSurface(renderer,pictureLW);
   arrayTexture[TEXTURE_LB] = SDL_CreateTextureFromSurface(renderer,pictureLB);
-
-  for(int i = 0 ; i < 4 ; i++){
+  arrayTexture[TEXTURE_PRIS] = SDL_CreateTextureFromSurface(renderer,picturePris);
+  for(int i = 0 ; i < 5 ; i++){
     if(arrayTexture[i] == NULL){
       perror("SDL_CreateTextureFromSurface()");
     }
@@ -262,6 +272,12 @@ void print_damier (SDL_Renderer *renderer,SDL_Texture ** arrayTexture, Damier  d
         break;
         case (2 * MULTIPLICATEUR_JOUEUR + REINE) :
         print_picture(renderer,arrayTexture,TEXTURE_LB,damier[i][j].cases);
+        break;
+        case (1 * MULTIPLICATEUR_JOUEUR + PRIS) :
+        print_picture(renderer,arrayTexture,TEXTURE_PRIS,damier[i][j].cases);
+        break;
+        case (2 * MULTIPLICATEUR_JOUEUR + PRIS) :
+        print_picture(renderer,arrayTexture,TEXTURE_PRIS,damier[i][j].cases);
         break;
         default :
         print_blue_tile(renderer,cs);
@@ -500,7 +516,7 @@ int control_recv_msg(char * buffer){
     return 1;
     break;
     case 5:
-    puts("return 0");
+    puts("un gagnant ou une deco");
     return 2;
     break;
   }

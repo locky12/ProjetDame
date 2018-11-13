@@ -44,6 +44,7 @@ void send_round_player (int socket);
 int control_connect_player (Room *room);
 char ** read_move_query (char * buffer);
 int charInInt (char c);
+void notif_end(Room * room,int control);
 
 
 int main(int argc, char **argv) {
@@ -153,6 +154,7 @@ int control_connect_player (Room *room){
     }
     else {
       delete_player_room(room->play[i]);
+
       room->sizePlay -= 1;
       return 0;
     }
@@ -388,12 +390,23 @@ void * room_play_thread (void * args)
   {
     printf(" Le joueur %d a gagné\n", joueurActuel); // TODO
   }
+  notif_end(room,control);
   prepare_exit_thread(room);
   puts("$$$$$$$$$ FIN $$$$$$$$$$$");
   puts("$$$$$$$$$ FIN $$$$$$$$$$$");
   puts("fin thread");
 
   pthread_exit(room);
+}
+void notif_end (Room * room,int control){
+  for(int i = 0; i < 3; i++){
+    if(!control && room-> play[i].observer != 0){
+      send_player(room-> play[i].socket,"5/DECO");
+    }
+    else if (control &&room-> play[i].observer != 0){
+      send_player(room-> play[i].socket, "5/GAGNE");
+    }
+  }
 }
 
 void prepare_exit_thread(Room *room){
