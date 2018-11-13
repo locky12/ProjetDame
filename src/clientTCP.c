@@ -164,7 +164,7 @@ int  connexion(int port)
       {
         // puts("SDL_WaitEvent00");
         SDL_PollEvent(&event);
-        quit = exit_client (event,quit);
+        quit = exit_client (event,quit,socket_connexion);
         if(game->change == 1)
         {
           //  pthread_mutex_lock (&mutex); /* On verrouille le mutex */
@@ -174,8 +174,9 @@ int  connexion(int port)
           print_damier(renderer, arrayTexture,damier);
           SDL_RenderPresent(renderer);
           game->change =0;
+          if(observer == 1){
           write_serveur(socket_connexion,"OK");
-
+        }
           //pthread_cond_signal (&condition); /* On délivre le signal : condition remplie */
           // pthread_mutex_unlock (&mutex); /* On déverrouille le mutex */
         }
@@ -194,6 +195,7 @@ int  connexion(int port)
         if(game->end == 1){
           inPlay = 0;
           game->end = 0;
+
           printf("socket après fermeture du threads : %d \n",game->socket );
         }
 

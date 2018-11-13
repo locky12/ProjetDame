@@ -17,7 +17,7 @@ SDL_Window * init_view ();
 void play_view (SDL_Window * window);
 SDL_Texture ** create_texture (SDL_Renderer *renderer, SDL_Texture ** arrayTexture);
 int eventClient(SDL_Event event, SDL_Renderer * renderer, Damier damier [10][10], Move * move, int socket,int numberPlayer);
-SDL_bool exit_client (SDL_Event event, SDL_bool quit);
+SDL_bool exit_client (SDL_Event event, SDL_bool  quit, int socket);
 void affichermatrice (Damier  damier[10][10]);
 void print_damier (SDL_Renderer *renderer,SDL_Texture ** arrayTexture, Damier  damier[10][10]);
 void afficheConnection (SDL_Renderer * renderer);

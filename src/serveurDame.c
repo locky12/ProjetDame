@@ -45,7 +45,7 @@ int control_connect_player (Room *room);
 char ** read_move_query (char * buffer);
 int charInInt (char c);
 void notif_end(Room * room,int control);
-
+void deconnect_observer(Room * room);
 
 int main(int argc, char **argv) {
   server(atoi(argv[1]));
@@ -315,7 +315,7 @@ void * room_play_thread (void * args)
 
     FD_ZERO(&rd);
 		FD_SET(room ->socketServer,&rd);
-    for(int k = 0 ; k < 2 ; k++)
+    for(int k = 0 ; k < size ; k++)
     {
       FD_SET(room-> play[k].socket, &rd);
       if(room-> play[k].socket > max)
@@ -329,7 +329,7 @@ void * room_play_thread (void * args)
       perror("select");
     }
     printf(" *** select 2+++++\n" );
-    for ( i = 0; i < 2; i++ )
+    for ( i = 0; i < size; i++ )
     {
       if(FD_ISSET(room-> play[i].socket, &rd))
       {
@@ -344,6 +344,13 @@ void * room_play_thread (void * args)
           room-> play[i].observer =0; // Passe observateur à 0 pour indiquer qu'il a déco.
           break;
         }
+        if(buffer[0] == '5'){
+          puts("observateur deconnecté");
+          deconnect_observer(room);
+          size--;
+        }
+        else
+        {
         char ** result = read_move_query(buffer);
         afficheDamier(damier);
         printf("%s\n", buffer);
@@ -378,7 +385,7 @@ void * room_play_thread (void * args)
           memset( buffer, '\0', sizeof( buffer ) );
           send_player(otherPlayer,"3");
         }
-
+      }
          // TODO :gerer le cas de l'observateur qui déco
         // TODO SI il peut rejouer
 
@@ -445,6 +452,10 @@ Player delete_player_room(Player player) {
   memset(player.pseudo, '\0', 30);
   player.socket = 0;
   player.observer = 0;
+}
+void deconnect_observer(Room * room){
+  room->play[2].observer = 0;
+  room->sizePlay = 2;
 }
 
 

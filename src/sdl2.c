@@ -330,7 +330,7 @@ void print_case_damier (SDL_Renderer *renderer,SDL_Texture ** arrayTexture, Dami
 // }
 
 SDL_Window * init_view () {
-  // bug sans problème de pilote graphique
+  // bug sans, problème de pilote graphique, surement du au bash on windows
   // désactive accélération matériel
   SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
   SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, 0);
@@ -353,14 +353,14 @@ SDL_Window * init_view () {
   /*if(TTF_Init() < 0 ){
   printf("Erreur d'initiaisation de la TTF : %s\n", TTF_GetError());
 }*/
-window = SDL_CreateWindow("Une fenetre SDL" , SDL_WINDOWPOS_CENTERED , SDL_WINDOWPOS_CENTERED , 800 , 800 , 0);
+window = SDL_CreateWindow("Jeu de Dame" , SDL_WINDOWPOS_CENTERED , SDL_WINDOWPOS_CENTERED , 800 , 800 , 0);
 if(window == NULL)
 {
   printf("Erreur lors de la creation d'une fenetre : %s",SDL_GetError());
-  //return EXIT_FAILURE;
+  exit(EXIT_FAILURE);
 }
 return window;
-//SDL_Delay(10000);
+
 }
 SDL_Renderer *create_renderer (SDL_Window *window) {
   SDL_Renderer *renderer;
@@ -368,49 +368,15 @@ SDL_Renderer *create_renderer (SDL_Window *window) {
   if(renderer == NULL)
   {
     printf("Erreur lors de la creation d'un renderer : %s",SDL_GetError());
-    exit(1);
+    exit(EXIT_FAILURE);
   }
   return renderer;
 }
-// void play_view (SDL_Window * window) {
-//   SDL_Event event;
-//   SDL_bool quit = SDL_FALSE;
-//   SDL_Renderer *renderer;
-//   //damier = allocDamier();
-//   Damier damier[10][10];
-//   Move * move = malloc(sizeof(move));
-//   init_game(damier);
-//   place_tile (damier);
-//   affichermatrice(damier);
-//   SDL_Texture **arrayTexture;
-//   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-//   if(renderer == NULL)
-//   {
-//       printf("Erreur lors de la creation d'un renderer : %s",SDL_GetError());
-//       return;
-//   }
-//   arrayTexture = create_texture (renderer, arrayTexture);
-//
-// while(!quit)
-// {
-//
-//     //SDL_Delay(20);
-//   //  printf("je suis la \n" );
-//
-//   print_damier(renderer, arrayTexture, damier);
-//   SDL_RenderPresent(renderer);
-//     SDL_WaitEvent(&event);
-//     quit = exit_client (event,quit);
-//     eventClient(event, renderer, damier, move,3);
-//
-//
-// }
-// //SDL_DestroyWindow(window);
-// SDL_Quit();
-// }
 
-SDL_bool exit_client (SDL_Event event, SDL_bool  quit){
+
+SDL_bool exit_client (SDL_Event event, SDL_bool  quit, int socket){
   if(event.type == SDL_QUIT){
+    write_serveur(socket,"5");
     return SDL_TRUE;
   }
   return SDL_FALSE;
