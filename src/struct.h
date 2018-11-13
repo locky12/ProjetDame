@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+
 typedef struct Damier {
   int pion;
   SDL_Rect cases;

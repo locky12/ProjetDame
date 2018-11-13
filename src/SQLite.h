@@ -8,11 +8,11 @@ void cree_table_joueur(sqlite3 * db);
 // Affiche les resultat de la requete passer en parametre
 void read_data (sqlite3 * db, char * requete);
 // crée une nouvelle entrée joueur
-void write_data_player (sqlite3 * db, char * pseudo, char * pwd);
+int write_data_player (sqlite3 * db, char * pseudo, char * pwd);
 // retourne le mdp par rapport au pseudo
 char * retrieve_pwd (sqlite3 *db,char * pseudo);
 
-
+int retrieve_pseudo (sqlite3 *db, char * pseudo) ;
 
 /********* TEST ********/
 

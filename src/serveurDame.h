@@ -13,3 +13,5 @@ int accept_player (int socket_ecoute);
 int listen_net (int port);
 
 void server(int port);
+
+char ** read_move_query (char * buffer);

@@ -17,6 +17,7 @@ struct Room {
   int index;
   int haveObserver;
   int inGame;
+  int socketServer;
 };
 struct ArrayRoom {
   Room *array;

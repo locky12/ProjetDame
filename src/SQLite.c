@@ -25,7 +25,9 @@ sqlite3 *ouvrir_db () {
   sqlite3 *db;
   int rc;
   char *zErrMsg = 0;
-  rc = sqlite3_open("basepourdame.db", &db);
+  rc = sqlite3_open("BDD.db", &db);
+  cree_table_joueur(db);
+  write_data_player (db, "alice", "destrier");
 
   if( rc ) {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
@@ -110,7 +112,7 @@ void read_data (sqlite3 * db, char * requete){
 
 /* fonction qui d'ajouter un joueur. Elle prend le pseudo et le mot de passe */
 /* et les ajoutes dans la base de donnee. Elle initialise les scores à O */
-void write_data_player (sqlite3 * db, char * pseudo, char * pwd){
+int write_data_player (sqlite3 * db, char * pseudo, char * pwd){
   char * ErrMsg = 0;
   int rc;
   char sql[500];
@@ -120,8 +122,10 @@ void write_data_player (sqlite3 * db, char * pseudo, char * pwd){
   if( rc != SQLITE_OK ) {
     fprintf(stderr, "SQL error pas insertion: %s\n", ErrMsg);
     sqlite3_free(ErrMsg);
+    return 0;
   } else {
     fprintf(stdout, "Operation done successfully\n");
+    return 1;
   }
 }
 /* Prend en parametre un pseudo et returne le mot de passe correspondant */
@@ -133,6 +137,7 @@ char * retrieve_pwd (sqlite3 *db,char * pseudo) {
   void *data;
   sqlite3_stmt *res;
 
+  if(!retrieve_pseudo(db,pseudo)) {
   sprintf(sql,"Select PWD from JOUEUR where pseudo = ?");
   rc = sqlite3_prepare_v2(db, sql, -1, &res, 0);
 
@@ -153,6 +158,41 @@ char * retrieve_pwd (sqlite3 *db,char * pseudo) {
      mdp = (char *)sqlite3_column_text(res, 0);
 return mdp;
  }
+}
+return NULL;
+}
+int retrieve_pseudo (sqlite3 *db, char * pseudo) {
+  char * ErrMsg = 0;
+  unsigned char *ps;
+  int rc;
+  char sql[500];
+  void *data;
+  sqlite3_stmt *res;
+
+  sprintf(sql,"Select PSEUDO from JOUEUR where pseudo = ?");
+  rc = sqlite3_prepare_v2(db, sql, -1, &res, 0);
+
+ if (rc == SQLITE_OK) {
+
+     int idx = sqlite3_bind_parameter_index(res, "@id");
+     sqlite3_bind_text(res, 1, pseudo,strlen(pseudo),0);
+
+ } else {
+
+     fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+     return 0;
+ }
+
+ int step = sqlite3_step(res);
+
+ if (step == SQLITE_ROW) {
+     printf("Le pseudo est : %s\n", sqlite3_column_text(res, 0));
+     ps = (char *)sqlite3_column_text(res, 0);
+     if(strcmp(ps,pseudo) == 0 ){
+       return 1;
+     }
+ }
+ return 0;
 }
 
 // /* Fonction de test du fichier */

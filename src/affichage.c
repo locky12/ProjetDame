@@ -4,7 +4,7 @@
 
 void afficherJoueur(int joueurActuel)
 {
-	printf("C'est maintenant au joueur ");
+	printf(" C'est maintenant au joueur ");
 	if (joueurActuel==1) {
 		printf("blanc");
 	}
@@ -39,6 +39,7 @@ void afficheDamier(Damier damier[10][10])
 				{
 					case PION: printf("P"); break;
 					case REINE: printf("Q"); break;
+					case PRIS: printf("X"); break;
 					printf("%d ", damier[ligne][colonne].pion);
 				}
 				printf("%d", damier[ligne][colonne].pion/MULTIPLICATEUR_JOUEUR); // afficher numero joueur

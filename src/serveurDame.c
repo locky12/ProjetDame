@@ -12,7 +12,8 @@
 #include <fcntl.h>
 #include "login.h"
 #include "struct.h"
-
+#include "deplacement.h"
+#include "affichage.h"
 //#include "serveurDame.h"
 
 
@@ -39,6 +40,12 @@ void add_old_player (ArrayRoom *array_room, Room room);
 void reset_array_play (ArrayRoom *array_room, Room room);
 void send_move (Move * move, int ** arrayCapture, int size,int option, char * buffer  );
 void send_number_player (Player *list);
+void send_round_player (int socket);
+int control_connect_player (Room *room);
+char ** read_move_query (char * buffer);
+int charInInt (char c);
+
+
 int main(int argc, char **argv) {
   server(atoi(argv[1]));
   return 0;
@@ -59,13 +66,13 @@ ArrayRoom* init_arrayRoom() {
 
     printf("init : %d \n",array_room->array[j].sizePlay );
     array_room->array[j].play = malloc(3*sizeof(Player));
-      if(array_room->array[j].play == NULL){
-        perror("malloc()");
-        exit(1);
-      }
-      else {
-        puts("allocation play ok");
-      }
+    if(array_room->array[j].play == NULL){
+      perror("malloc()");
+      exit(1);
+    }
+    else {
+
+    }
   }
 
   return array_room;
@@ -90,48 +97,70 @@ void search_array (ArrayRoom *array_room) {
 int tri_rooms (ArrayRoom *array_room) {
 
 }
-int add_player_array(ArrayRoom *array_room,int socket) {
-  //read
-  int observer = 1;
-  int sizeP = 0;
-  int indexF = array_room->indexFree;
-  printf("index insertion :: %d\n",indexF );
-  sizeP = array_room ->array[indexF].sizePlay;
-  printf("taille :: %d\n",array_room ->array[indexF].sizePlay);
-  if(observer == 1){
-    sprintf(array_room->array[indexF].play[sizeP].pseudo,"bob" );
-    // array_room->array[indexF].play[sizeP].pseudo = "bob";
-    array_room->array[indexF].play[sizeP].socket = socket;
-    array_room->array[indexF].play[sizeP].observer = 44;
-    array_room->array[indexF].sizePlay = sizeP + 1;
-    printf("taille :: %d\n",array_room->array[indexF].sizePlay );
-    if (array_room->array[indexF].sizePlay == 2) {
-      search_array (array_room);
-      printf("%s\n","la ** la" );
-      return 1;
-    }
-
-  }
-  else if(observer == 2){
-    return 0;
-  }
-  return 0;
-}
+// int add_player_array(ArrayRoom *array_room,int socket) {
+//   //read
+//   int observer = 1;
+//   int sizeP = 0;
+//   int indexF = array_room->indexFree;
+//   printf("index insertion :: %d\n",indexF );
+//   sizeP = array_room ->array[indexF].sizePlay;
+//   printf("taille :: %d\n",array_room ->array[indexF].sizePlay);
+//   if(observer == 1){
+//     sprintf(array_room->array[indexF].play[sizeP].pseudo,"bob" );
+//     // array_room->array[indexF].play[sizeP].pseudo = "bob";
+//     array_room->array[indexF].play[sizeP].socket = socket;
+//     array_room->array[indexF].play[sizeP].observer = 44;
+//     array_room->array[indexF].sizePlay = sizeP + 1;
+//     printf("taille :: %d\n",array_room->array[indexF].sizePlay );
+//     if (array_room->array[indexF].sizePlay == 2) {
+//       search_array (array_room);
+//       printf("%s\n","la ** la" );
+//       return 1;
+//     }
+//
+//   }
+//   else if(observer == 2){
+//     return 0;
+//   }
+//   return 0;
+// }
 
 Room * goGame (ArrayRoom * array_room){
-//  puts("dans go game");
   //printPlayer(array_room->array[0].play[1]);
   for (int i = 0; i < 10; i++){
     if(array_room->array[i].sizePlay == 3 || (array_room->array[i].sizePlay == 2 && array_room->array[i].haveObserver == 0)) {
-    //  puts("condition 1 ok");
-      if(array_room->array[i].inGame == 0) {
-        puts("condition 2 ok");
+
+      if(array_room->array[i].inGame == 0 && control_connect_player(&array_room->array[i])) {
+
         array_room->array[i].inGame = 1;
         return &array_room->array[i];
       }
     }
   }
   return NULL;
+}
+int control_connect_player (Room *room){
+  char buffer[100];
+  int count = 0;
+  for(int i = 0; i < room->sizePlay; i++){
+    send_player(room->play[i].socket,"8");
+    read_player(room->play[i].socket,buffer);
+    if(buffer[0] == '9'){
+      count++;
+      if(count == 2){
+        return 1;
+      }
+    }
+    else {
+      delete_player_room(room->play[i]);
+      room->sizePlay -= 1;
+      return 0;
+    }
+    memset(buffer,'\0',100);
+  }
+
+
+  return 0;
 }
 /***** ********* Serveur ***************/
 void server (int port) {
@@ -153,7 +182,6 @@ void server (int port) {
   ArrayRoom *array_room = init_arrayRoom();
   socketServer = listen_net(port);
   if(array_room->array[0].sizePlay == 0){
-    puts("++++++++++++++++++++++++++++++++++");
   }
 
 
@@ -177,28 +205,25 @@ void server (int port) {
 
 
     if(socketPlayer != 0){ //si accept retourne une socket valideS
-      puts("avant control connect");
       printf("socket ++++++ %d\n",socketPlayer );
       sleep(1);
       control_connect(array_room,socketPlayer);
-      puts("**********************");
       printPlayer(array_room->array[0].play[0]);
-      puts("**********************");
     }
     // sprintf(array_room->array[9].play[0].pseudo, "bbb");
     // printPlayer(array_room->array[9].play[0]);
 
-      // on ajoute un joueur si la fonction returne 1 une partie peut être lancée
-      room =  goGame(array_room);
-      if(room != NULL) {
-        count++;
-        room->index = index;// on récupère l'index du thread pour la sortie
-        //room = &array_room->array[index];// on cast le salon en un pointer de salon
+    // on ajoute un joueur si la fonction returne 1 une partie peut être lancée
+    room =  goGame(array_room);
+    if(room != NULL) {
+      count++;
+      room->index = index;// on récupère l'index du thread pour la sortie
+      //room = &array_room->array[index];// on cast le salon en un pointer de salon
+      room -> socketServer = socketServer;
+      pthread_create(&threadRoom[indexThread], NULL, room_play_thread, room);// on crée le thread
 
-        pthread_create(&threadRoom[indexThread], NULL, room_play_thread, room);// on crée le thread
-
-        indexThread++;// le prochain thread crée aura un indice +1;
-      }
+      indexThread++;// le prochain thread crée aura un indice +1;
+    }
 
     else {
       void * arg;
@@ -209,37 +234,41 @@ void server (int port) {
           if(verification = pthread_tryjoin_np(threadRoom[i], &arg) == 0){
             tempRoom = *(Room*)arg;
             add_old_player (array_room, tempRoom);
-            puts("********************************");
-            printPlayer(tempRoom.play[0]);
-            puts("********************************");
-            printPlayer(array_room->array[0].play[0]);
-            puts("********************************");
             //printPlayer(room[0]-> play[count]);
           }
           //printf("verification : %d \n", verification);
         }
       }
 
-      sleep(1);
+
     }
+    sleep(1);
   }
 
 }
 void add_old_player (ArrayRoom *array_room, Room room){
   int size =  array_room->array[array_room->indexFree].sizePlay;
-
+  printf("add_old_player() : %d\n",size);
+  for (int i = 0; i < 3; i++) {
+    printf("pseudo : %s\n",room.play[i].pseudo );
+    printf("socket : %d\n",room.play[i].socket );
+    printf("observateur : %d\n",room.play[i].observer);
+    puts("***************************");
+  }
+  puts("$$$$$$$$$ old $$$$$$$$$$$");
   reset_array_play(array_room, room);
   for(int i = 0; i < size; i++){
-    if (room.play[i].observer != 0){
+      printf("room.play[i].observer : %d\n",room.play[i].observer );
       if(room.play[i].observer == 1){
-        add_client_array(array_room, room.play[i].socket, room.play[i].pseudo);
+        puts("ajout d'un acien joueur");
+        add_client_array (array_room,room.play[i].socket ,room.play[i].pseudo);
       }
       else if (room.play[i].observer == 2)
       {
-        add_observer_array(array_room,room.play[i].socket, room.play[i].pseudo);
+        add_observer_array (array_room,room.play[i].socket ,room.play[i].pseudo);
       }
     }
-  }
+
 }
 void reset_array_play (ArrayRoom *array_room, Room room) {
   int index = room.index;
@@ -247,47 +276,121 @@ void reset_array_play (ArrayRoom *array_room, Room room) {
   array_room->array[index].haveObserver = 0;
   array_room->array[index].index = 0;
   array_room->array[index].inGame = 0;
+  // for(int i = 0; i< 3 ; i++ ){
+  //   array_room->array[index].play[i].observer = 0;
+  // }
 
 }
 /**************************************************************************/
-void * room_play_thread (void * args) {
+void * room_play_thread (void * args)
+{
   printf("%s\n","room_play_thread" );
+  fd_set rd;
   int control = 1;
   char buffer[500];
   int socket;
   int size = 2;
-  int i;
   Room *room = args;
+  int i, max = room-> socketServer;
+  int otherPlayer = 0;
+  Damier damier[10][10];
+  initialiseDamier(damier);
+  int joueurActuel = 1;
+  sleep(5);
   send_number_player(room-> play);
+  send_round_player(room->play[0].socket);
   //room-> play = args;
 
-  // for (int i = 0; i < 3; i++) {
-    //   printf("pseudo : %s\n",room-> play[i].pseudo );
-    //   printf("socket : %d\n",room-> play[i].socket );
-    //   printf("observateur : %d\n",room-> play[i].observer);
-    // }
-
-
-
-    // room = (Room)room;
-    // change que l'intérieur de cette boucle
-    do {
-      if(room->play[2].observer == 2){
-        puts("un observateur est entrée");
-        size = 3;
-      }
-      for ( i = 0; i < 2; i++ ){
-        control = read_player(room-> play[i].socket, buffer); // fonction a changer par le jeu
-        if (control == 0) {// il faut qu'elle return 0 si le joueur a déco
-
-        room-> play[i].observer =0; // Passe observateur à 0 pour indiquer qu'il a déco.
-        break;
-      }
-      send_all_player(room-> play,room-> play[i].socket,buffer,size); // TODO :gerer le cas de l'observateur qui déco
-      printf("%s\n",buffer );
+  do
+  {
+    sleep(1);
+    if(room->play[2].observer == 2)
+    {
+      puts("un observateur est entrée");
+      size = 3;
+      sleep(1);
     }
-  }while (control == 1);
+
+    FD_ZERO(&rd);
+		FD_SET(room ->socketServer,&rd);
+    for(int k = 0 ; k < 2 ; k++)
+    {
+      FD_SET(room-> play[k].socket, &rd);
+      if(room-> play[k].socket > max)
+      {
+        max = room-> play[k].socket;
+      }
+    }
+    printf(" *** select 1  +++++\n" );
+    if(select(max + 1,&rd,NULL,NULL,NULL) < 0)
+    {
+      perror("select");
+    }
+    printf(" *** select 2+++++\n" );
+    for ( i = 0; i < 2; i++ )
+    {
+      if(FD_ISSET(room-> play[i].socket, &rd))
+      {
+        joueurActuel = i + 1;
+        printf(" **************++++++++++++++++****************\n" );
+
+
+        control = read_player(room-> play[i].socket, buffer); // fonction a changer par le jeu
+        if (control == 0) // il faut qu'elle return 0 si le joueur a déco
+        {
+          puts("a deco ++----------++");
+          room-> play[i].observer =0; // Passe observateur à 0 pour indiquer qu'il a déco.
+          break;
+        }
+        char ** result = read_move_query(buffer);
+        afficheDamier(damier);
+        printf("%s\n", buffer);
+        printf(" result ******* %d : %d : %d : %d : \n", charInInt(result[0][0]), charInInt(result[0][1]), charInInt(result[1][0]), charInInt(result[1][1]));
+        int deplacement = deplacementValide(damier, joueurActuel, charInInt(result[0][0]), charInInt(result[0][1]), charInInt(result[1][0]), charInInt(result[1][1]));
+        printf("deplacement %d\n", deplacement);
+        otherPlayer = (i == 0) ? room-> play[1].socket : room-> play[0].socket;
+        if(deplacement)
+        {
+          effectueDeplacement(damier, joueurActuel, charInInt(result[0][0]), charInInt(result[0][1]), charInInt(result[1][0]), charInInt(result[1][1]));
+          send_all_player(room-> play,room-> play[i].socket,buffer,size);
+        }
+        else
+        {
+          //send_all_player(room-> play,room-> play[i].socket,"10",size);
+        }
+        int prise = canTakePion(damier, joueurActuel, charInInt(result[1][0]), charInInt(result[1][1]));
+        if(deplacement == 2 && prise)
+        {
+          printf("rejoue\n");
+          // sleep(2);
+          send_player(room-> play[i].socket,"3");
+          printf("send\n");
+          read_player(otherPlayer,buffer);
+          printf("read\n");
+        }
+        else
+        {
+          deletePion(damier);
+          printf("otherPlayer ; %d\n",otherPlayer );
+          read_player(otherPlayer,buffer);
+          memset( buffer, '\0', sizeof( buffer ) );
+          send_player(otherPlayer,"3");
+        }
+
+         // TODO :gerer le cas de l'observateur qui déco
+        // TODO SI il peut rejouer
+
+      }
+        printf("%s\n",buffer );
+    }
+  }while (control == 1 && !jeuEstFini(damier, joueurActuel%2+1));
+  if (control == 1)
+  {
+    printf(" Le joueur %d a gagné\n", joueurActuel); // TODO
+  }
   prepare_exit_thread(room);
+  puts("$$$$$$$$$ FIN $$$$$$$$$$$");
+  puts("$$$$$$$$$ FIN $$$$$$$$$$$");
   puts("fin thread");
 
   pthread_exit(room);
@@ -322,10 +425,13 @@ void prepare_exit_thread(Room *room){
   printf("pseudo après deplacement%s\n",   room->play[0].pseudo);
 }
 
-
+void send_round_player (int socket){
+  send_player(socket,"3");
+}
 Player delete_player_room(Player player) {
   memset(player.pseudo, '\0', 30);
   player.socket = 0;
+  player.observer = 0;
 }
 
 
@@ -435,6 +541,7 @@ int accept_player (int socket_ecoute) {
     for (int i = 0; i < 2; i++)
     {
       sprintf(buffer,"%d/%d",1,i+1);
+      printf("buffer numberPlayer ***** %s\n",buffer);
       printf("buffer ; %s\n",buffer );
       send_player(list[i].socket,buffer);
       memset(buffer,'\0',10);
@@ -444,13 +551,65 @@ int accept_player (int socket_ecoute) {
 
   void send_move (Move * move, int ** arrayCapture, int size,int option, char * buffer  ){
     // char buffer[100] = {0};
-    printf("%s\n","je bug" );
-   sprintf(buffer,"%d/%d-%d/%d-%d",0,move->position[0],move->position[1],move->newPosition[0],move->newPosition[0]);
+    sprintf(buffer,"%d/%d-%d/%d-%d",0,move->position[0],move->position[1],move->newPosition[0],move->newPosition[0]);
     for (int i = 0; i < size; i++){
-      printf("%s\n","ta");
       sprintf(buffer,"%s/%d-%d",buffer,arrayCapture[i][0],arrayCapture[i][0]);
     }
     sprintf(buffer,"%s/%d",buffer,size);
 
 
+  }
+
+  char ** read_move_query (char * buffer)
+  {
+    int       i         = 0,
+    r         = 0,
+    count     = 0,
+    ok        = 1;
+    const int sizeAlloc = 3;
+
+    char      temp [100];
+    char ** result;
+    result = malloc(sizeAlloc * sizeof(result));
+    if(result == NULL)
+    {
+      perror("malloc()");
+      exit(1);
+    }
+
+    // printf("ant decomposition : %s\n",buffer );
+    while(ok){
+      //printf("char : %c\n",buffer[i] );
+      if(buffer[i] != '/' && buffer[i] != '\0' && buffer[i] != '-'){
+        temp[r] = buffer[i];
+        i++;
+        r++;
+      }
+      else if (buffer[i] == '/') {
+        i++;
+        result[count] = malloc(3*sizeof(result));
+        if(result[count] == NULL){
+          perror("malloc()");
+          exit(1);
+        }
+        printf("%s\n",temp );
+        strcpy(result[count],temp);
+        count++;
+        r = 0;
+        // memset(temp,'\0',strlen(temp));
+      }
+      else if (buffer[i] == '-') {
+        char c = buffer[i+1] ;
+        sprintf(result[count-1],"%c%c",temp[0],c);
+        i++;
+      }
+      else if (buffer[i] == '\0') {
+        ok = 0;
+      }
+
+    }
+    return result;
+  }
+  int charInInt (char c) {
+    return c - '0';
   }

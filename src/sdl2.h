@@ -1,4 +1,4 @@
-#include "deplacement.h"
+
 #include "communication.h"
 
 enum {TEXTURE_PW, TEXTURE_PB, TEXTURE_LW, TEXTURE_LB};
@@ -21,8 +21,11 @@ SDL_bool exit_client (SDL_Event event, SDL_bool quit);
 void affichermatrice (Damier  damier[10][10]);
 void print_damier (SDL_Renderer *renderer,SDL_Texture ** arrayTexture, Damier  damier[10][10]);
 void afficheConnection (SDL_Renderer * renderer);
-int changeDamier (int socket,Damier damier[10][10]);
+void changeDamier ( Damier damier[10][10],char * buffer, int numberPlayer);
 int charInInt (char c);
+char * recv_msg_server (int socket, char * buffer );
+int control_recv_msg(char * buffer);
+void print_case_damier (SDL_Renderer *renderer,SDL_Texture ** arrayTexture, Damier  damier[10][10], int i, int j);
 
 SDL_Renderer *create_renderer (SDL_Window *window);
 /*************************************************************************************************/

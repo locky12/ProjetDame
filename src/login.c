@@ -141,40 +141,7 @@ char ** read_query_log (char * buffer, char ** result) {
   return result;
 }
 
-// TODO : associer
-// void readQueryLog(char * pseudo, char * mdp ) {}
-/* fonction quipermet de s'inscrire  */
-/* appel 2 fois la fonction saisie */
-/* script le mot de passe */
-//TODO : appeller sur le client et envoyee les info au serveur.
-void inscription (int option){
 
-
-  char pseudo[20];
-  char mdp [20];
-  char pwdcrypt[25];
-  int taille_inscription = 15;
-  char  *test = malloc(100 * sizeof(test));
-  char ** test2;
-
-  saisie_login (pseudo,taille_inscription, "Votre pseudo", option);
-  printf("%s\n",pseudo);
-  saisie_login (mdp,taille_inscription, "Votre mot de passe", option);
-  printf("***********\n");
-  crypt_pwd(mdp,pwdcrypt);
-
-  printf("mdp  : %s **** \n",pwdcrypt );
-
-  //decrypt_pwd(mdp,pwdcrypt);
-  // test = catQuery(pseudo,pwdcrypt,0);
- printf("test : %s ****\n",test );
-  // test2 = read_query_log (test,test2);
-  printf("test[0] : %s : %ld /*\n",test2[0],strlen(test2[0]));
-  printf("test[1] : %s  /*\n",test2[1]);
-  printf("test[2] : %s  /*\n",test2[2]);
-  //TODO : envoyer les données au serveur.
-  //saisie_mdp(mdp, taille_inscription);
-}
 int sign_player ( char * pseudo, char * pwd) {
   puts("open sign_player ********");
   sqlite3 *db;
@@ -186,6 +153,7 @@ int sign_player ( char * pseudo, char * pwd) {
   return 1;
 }
 int log_player (char * pseudo, char * pwd){
+  puts("log player*******");
   sqlite3 *db;
   db = ouvrir_db();
   char *tempPwd;
@@ -239,6 +207,18 @@ char * control_connect (ArrayRoom *array_room, int sock) {
     }
 
   }
+  else if (atoi(result[0]) == 3){
+    if(atoi(result[3]) == 1) {
+      puts("ajout joueur");
+      add_client_array (array_room,sock,"invite");
+    }
+    else {
+      puts("ajout observateur");
+      add_observer_array (array_room,sock,"invite");
+      puts("fin ajout observateur");
+      return "";
+    }
+  }
   else {
     sprintf(buffer,"%d/%s",0,"failed");
     send_msg(sock,buffer);
@@ -257,31 +237,38 @@ int connexion_client (int sock, char *pseudo, char *pwd, int observer, int inscr
 int add_observer_array (ArrayRoom * array_room,int sock ,char* pseudo){
   puts("add_observer_array");
   for (int i = 0; i < 10; i++){
-    if(array_room->array[i].sizePlay < 3 && array_room->array[i].haveObserver == 0 && array_room->array[i].inGame == 0 ) {
+    if(array_room->array[i].sizePlay < 4 && array_room->array[i].haveObserver == 0 /*&& array_room->array[i].inGame == 0*/ ) {
+      array_room->array[i].sizePlay++;
       array_room->array[i].play[2] = add_client(array_room[i].array[i].play[2], sock, pseudo,2);
       printf("%s ****\n", array_room->array[i].play[2].pseudo);
       puts("midle_add_observer_array");
 
       array_room->array[i].haveObserver = 1;
-      array_room->array[i].sizePlay++;
+
       break;
     }
   }
   puts("fin _add_observer_array");
 }
+
 int add_client_array (ArrayRoom * array_room,int sock ,char* pseudo){
   puts("add_client_array");
+  int control = 0;
   for (int i = 0; i < 10; i++){
-    if(array_room->array[i].sizePlay < 2) {
-      printf("insertion joueur %d ++++++++++++++++++++++++++++++++++\n",i );
-    array_room->array[i].play[array_room->array[i].sizePlay]  = add_client(array_room->array[i].play[array_room->array[i].sizePlay], sock, pseudo,1);
-      array_room->array[i].sizePlay++;
-      printf("***************  %d ******************\n",array_room->array[i].sizePlay );
-      break;
+    if(array_room->array[i].inGame == 0){
+      for(int j = 0; j < 2; j++){
+
+        if(array_room->array[i].play[j].observer == 0){
+          printf("++++ insertion en i = %d, en j = %d ++++",i,j);
+          array_room->array[i].play[j] = add_client(array_room->array[i].play[j], sock, pseudo,1);
+          array_room->array[i].sizePlay++;
+          control = 1;
+          break;
+        }
+      }
     }
-    else if ( (array_room->array[i].sizePlay < 3 &&array_room->array[i].haveObserver == 1) ){
-      array_room->array[i].play[array_room->array[1].sizePlay]  = add_client(array_room->array[i].play[array_room->array[i].sizePlay], sock, pseudo,1);
-        array_room->array[i].sizePlay++;
+    if(control){
+      break;
     }
   }
 }
