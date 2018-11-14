@@ -96,7 +96,7 @@ void select_joueur (sqlite3 * db){
   }
 }
 // Permet d'executer une requete en parametre et d'afficher.
-void read_data (sqlite3 * db, char * requete){
+int read_data (sqlite3 * db, char * requete){
 
   char * ErrMsg = 0;
   int rc;
@@ -105,8 +105,10 @@ void read_data (sqlite3 * db, char * requete){
   if( rc != SQLITE_OK ) {
     fprintf(stderr, "SQL error: %s\n", ErrMsg);
     sqlite3_free(ErrMsg);
+    return 0;
   } else {
     fprintf(stdout, "Operation done successfully\n");
+    return 1;
   }
 }
 
@@ -129,14 +131,33 @@ int write_data_player (sqlite3 * db, char * pseudo, char * pwd){
   }
 }
 /* Prend en parametre un pseudo et returne le mot de passe correspondant */
+
+char * controlMDP(sqlite3 *db,char * pseudo){
+  char buffer[100];
+  char * result;
+  int verif = 0;
+  sprintf(buffer,"%s%s","Select pseudo from Joueur where pseudo = ",pseudo);
+  verif = read_data(db,buffer);
+   printf("verif %d\n",verif );
+  if(verif == 1){
+    result = retrieve_pwd(db,pseudo);
+    return result;
+
+  }
+  return "\0";
+}
 char * retrieve_pwd (sqlite3 *db,char * pseudo) {
   char * ErrMsg = 0;
   unsigned char *mdp;
   int rc;
+  int verif = 0;
   char sql[500];
   void *data;
   sqlite3_stmt *res;
-
+  char buffer[100];
+  // sprintf(buffer,"%s%s","Select pseudo from Joueur where pseudo = ",pseudo);
+  // verif = read_data(db,buffer);
+  // printf("verif %d\n",verif );
   if(!retrieve_pseudo(db,pseudo)) {
   sprintf(sql,"Select PWD from JOUEUR where pseudo = ?");
   rc = sqlite3_prepare_v2(db, sql, -1, &res, 0);
@@ -162,12 +183,14 @@ return mdp;
 return NULL;
 }
 int retrieve_pseudo (sqlite3 *db, char * pseudo) {
+  puts("dans retrieve pseudo ");
   char * ErrMsg = 0;
   unsigned char *ps;
   int rc;
   char sql[500];
   void *data;
   sqlite3_stmt *res;
+  int verif = 0;
 
   sprintf(sql,"Select PSEUDO from JOUEUR where pseudo = ?");
   rc = sqlite3_prepare_v2(db, sql, -1, &res, 0);
@@ -175,22 +198,27 @@ int retrieve_pseudo (sqlite3 *db, char * pseudo) {
  if (rc == SQLITE_OK) {
 
      int idx = sqlite3_bind_parameter_index(res, "@id");
-     sqlite3_bind_text(res, 1, pseudo,strlen(pseudo),0);
-
+     verif = sqlite3_bind_text(res, 1, pseudo,20,0);
+     printf("id : %d, %d \n",idx, verif );
  } else {
 
      fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
      return 0;
  }
+ puts("crash");
+ if(verif == SQLITE_OK){
+   puts("crash");
+   int step = sqlite3_step(res);
 
- int step = sqlite3_step(res);
 
  if (step == SQLITE_ROW) {
+
      printf("Le pseudo est : %s\n", sqlite3_column_text(res, 0));
      ps = (char *)sqlite3_column_text(res, 0);
      if(strcmp(ps,pseudo) == 0 ){
        return 1;
      }
+ }
  }
  return 0;
 }

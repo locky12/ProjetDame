@@ -21,6 +21,7 @@
 
 //Prototypes
 
+void * thread_observer(void * arg);
 // Permet de lire un message d'un client
 int read_player(int socket_player, char *buffer);
 // Permet d'envoyer un message à un client
@@ -98,33 +99,7 @@ void search_array (ArrayRoom *array_room) {
 int tri_rooms (ArrayRoom *array_room) {
 
 }
-// int add_player_array(ArrayRoom *array_room,int socket) {
-//   //read
-//   int observer = 1;
-//   int sizeP = 0;
-//   int indexF = array_room->indexFree;
-//   printf("index insertion :: %d\n",indexF );
-//   sizeP = array_room ->array[indexF].sizePlay;
-//   printf("taille :: %d\n",array_room ->array[indexF].sizePlay);
-//   if(observer == 1){
-//     sprintf(array_room->array[indexF].play[sizeP].pseudo,"bob" );
-//     // array_room->array[indexF].play[sizeP].pseudo = "bob";
-//     array_room->array[indexF].play[sizeP].socket = socket;
-//     array_room->array[indexF].play[sizeP].observer = 44;
-//     array_room->array[indexF].sizePlay = sizeP + 1;
-//     printf("taille :: %d\n",array_room->array[indexF].sizePlay );
-//     if (array_room->array[indexF].sizePlay == 2) {
-//       search_array (array_room);
-//       printf("%s\n","la ** la" );
-//       return 1;
-//     }
-//
-//   }
-//   else if(observer == 2){
-//     return 0;
-//   }
-//   return 0;
-// }
+
 
 Room * goGame (ArrayRoom * array_room){
   //printPlayer(array_room->array[0].play[1]);
@@ -172,12 +147,18 @@ void server (int port) {
   count           = 0,
   indexThread     = 0,
   countPlay       = 0,
+  threadCreate    = 0,
   flag            = 0,
   verification    = 0,
   index           = 0;
   char buffer [500];
+  void  * argObs;
   Player      player = {0,0,""};
+  ListObserver * list = malloc(sizeof(list));
+  list->size = 0;
+  printf("taille liste = %d\n",list->size  );
   pthread_t threadRoom[10];
+  pthread_t threadObserver;
   // tempPlayer;
   Room        *room;
   /*Alloue un tableau de salon et des salons avec 3 joureur*/
@@ -209,11 +190,18 @@ void server (int port) {
     if(socketPlayer != 0){ //si accept retourne une socket valideS
       printf("socket ++++++ %d\n",socketPlayer );
       sleep(1);
-      control_connect(array_room,socketPlayer);
+      control_connect(array_room,list,socketPlayer);
       printPlayer(array_room->array[0].play[0]);
+      send_list_room(array_room,list);
     }
     // sprintf(array_room->array[9].play[0].pseudo, "bbb");
     // printPlayer(array_room->array[9].play[0]);
+    if(socketPlayer != 0 && threadCreate == 0 && list->size >  0){
+      threadCreate = 1;
+      pthread_create(&threadObserver,NULL,thread_observer,list);
+      //go_observer(array_room,list,socketPlayer)   void * thread_observer(void * arg)
+    }
+
 
     // on ajoute un joueur si la fonction returne 1 une partie peut être lancée
     room =  goGame(array_room);
@@ -241,8 +229,14 @@ void server (int port) {
           //printf("verification : %d \n", verification);
         }
       }
-
-
+      if (threadCreate == 1){
+        if(verification = pthread_tryjoin_np(threadObserver, &argObs) == 0  ){
+          int * result = (int*)argObs;
+          printf("result apres thread : %d, %d\n",result[0],result[1] );
+          copy_observer_array(array_room,list,result[0], result[1]);
+          threadCreate = 0;
+      }
+    }
     }
     sleep(1);
   }
@@ -416,6 +410,19 @@ void notif_end (Room * room,int control){
   }
 }
 
+void * thread_observer(void * arg){
+  puts("dans le thread observer");
+  int index;
+  int  * tab = malloc(2* sizeof(int));
+  int tabindice [2];
+  ListObserver * list = arg;
+  tab = index_observer(tab,list);
+  printf("tab = %d, %d ++-\n",tab[0],tab[1] );
+  puts("on quite le thread");
+  pthread_exit(tab);
+
+
+}
 void prepare_exit_thread(Room *room){
   int   i,
   count = 0;

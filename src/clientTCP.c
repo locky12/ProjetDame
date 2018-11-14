@@ -44,12 +44,13 @@ int chooseMod (int port);
 void * game_play(void * arg);
 Game * init_st_game ( int socket, int numberPlayer);
 void wait_game (int socket);
+void wait_observer(int socket);
 
 
-void saisie(char *buffer){
-  memset(buffer,'\0',sizeof(buffer));
-  fgets(buffer,TAILLE_SAISIE,stdin);
-}
+// void saisie(char *buffer){
+//   memset(buffer,'\0',sizeof(buffer));
+//   fgets(buffer,TAILLE_SAISIE,stdin);
+// }
 int  connexion(int port)
 {
   char *ip = "127.0.0.1";
@@ -129,6 +130,9 @@ int  connexion(int port)
       if (observer == 1) {
         inPlay = 1;
       wait_game(socket_connexion);
+    }
+    else {
+      wait_observer(socket_connexion);
     }
       // initialisation du damier
       init_game(damier);
@@ -279,6 +283,7 @@ int  connexion(int port)
     char choose [100];
     char pseudo [100];
     char pwd    [100];
+    char bufferRecv [100];
     int socket_connexion;
     int true = 0;
 
@@ -302,16 +307,24 @@ int  connexion(int port)
         socket_connexion = connexion(port);
         if(choose[0] == 2) {
           connexion_client(socket_connexion, pseudo, pwd, observer,2);
+          read_serveur(socket_connexion,bufferRecv);
+          puts("marche pas555");
+          if(charInInt(bufferRecv[0]) != 0) {
+            puts("marche pas");
           return socket_connexion;
+        }
         }
         else {
           connexion_client(socket_connexion, pseudo, pwd, observer,1);
+          read_serveur(socket_connexion,bufferRecv);
+          if(charinInt(bufferRecv[0]) != 0){
           return socket_connexion;
+        }
         }
       }
       else  {
         printf("Saisie incorrect \n");
-        return 0;
+        //return 0;
       }
     }
   }
@@ -348,7 +361,13 @@ perror("recv()");
 }
 printf("%ld *****-******\n", taille_recue);
 }*/
-
+void wait_observer(int socket){
+  int * tab;
+  char buffer [100];
+  read_msg(socket,buffer);
+   tab = read_list_game(buffer);
+   choose_game_observer(tab, socket);
+}
 int number_player (int socket)
 {
   char buffer [100];
