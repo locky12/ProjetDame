@@ -150,18 +150,25 @@
     write_data_player(db,pseudo,pwd);
     puts("end sign_player");
     read_data(db,"Select * from Joueur");
+    sqlite3_close(db);
     return 1;
   }
   int log_player (char * pseudo, char * pwd){
     puts("log player*******");
     sqlite3 *db;
     db = ouvrir_db();
-    char *tempPwd;
-    if(tempPwd[0] = controlMDP(db,pseudo)!= '\0' );
+    char *tempPwd = malloc(100);
+    tempPwd = controlMDP(db,pseudo,tempPwd);
+    // if( ){
+      printf("tempPWD : %s\n",tempPwd );
+      printf("tempPWD : %s\n",pwd );
 
-    if (strcmp(tempPwd,pwd) == 0){
+    if (tempPwd != NULL &&strcmp(tempPwd,pwd) == 0){
+      sqlite3_close(db);
       return 1;
     }
+  // }
+    sqlite3_close(db);
     return 0;
   }
   char * control_connect (ArrayRoom *array_room,ListObserver *  list, int sock) {
@@ -180,8 +187,8 @@
     printf("option : %d\n", atoi(result[0]) );
     if(atoi(result[0]) == 2) {
       sign_player(result[1],result[2]);
-      sprintf(buffer,"%d/%s",1,"connect_ok");
-      printf("%s\n", "connect_ok");
+      sprintf(buffer,"%d/%s",0,"Ok");
+      send_msg(sock,buffer);
 
 
     }
@@ -192,11 +199,14 @@
       if(atoi(result[3]) == 1 && verif == 1) {
         puts("ajout joueur");
         add_client_array (array_room,sock,result[1]);
+        send_msg(sock,"ok");
+        return "";
       }
       else if (atoi(result[3]) == 1 && verif == 1){
         puts("ajout observateur");
         add_list_observer (list,sock,result[1]);
         puts("fin ajout observateur");
+        send_msg(sock,"ok");
         return "";
       }
       else {
@@ -356,47 +366,50 @@
     }
     int * read_list_game(char * buffer){
       int count = 0;
-      int * result;
-      int size;
-      int index = 2;// les 2 premier ne sont pas des indices mais id du message
-      int posArray = 0;
-      char  temp [100];
-      // On cherche la fin du message envoyee represente par une '*'
-      puts("je crash");
-      while(buffer[count] != '*'){
-        count++;
-      }
-      puts("je crash2");
-      // on alloue un tableau avec la taille recu dans le message
-      size = charinInt(buffer[count]);
-      result = malloc(10 * sizeof(result));
-      puts("je crash3");
-      if(result == NULL){
-        perror("malloc()");
-        exit(EXIT_FAILURE);
-      }
-      count = 0;
-      // On va récupérer tous les indices de parties envoyée par le serveur
-      while(buffer[index] != '*'){
-        // tant que c'est different de / je mets dans temp
-        if(buffer[index] != '/'){
-          temp[count] = buffer[index];
-        }
-        // a chaque fois que je vois un / je mais le buffer dans le tableau
-        if(buffer[index] == '/'){
-          printf("temp lecture : %s\n",temp );
-          result[posArray] = atoi(temp);
-          printf("result[posArray]  : %d\n",result[posArray]  );
-          posArray++;
-          count =0;
-        }
-        index++;
-      }
-      // car je connais pas la taille ça me sert a le lire
-      for(int i = posArray; i<10 ;i++){
-        result[i] = -1;
-      }
-      return result;
+  int * result;
+  int size;
+  int index = 2;// les 2 premier ne sont pas des indices mais id du message
+  int posArray = 0;
+  char  temp [100];
+  // On cherche la fin du message envoyee represente par une '*'
+  puts("je crash");
+  while(buffer[count] != '*'){
+  count++;
+  }
+  puts("je crash2");
+  // on alloue un tableau avec la taille recu dans le message
+  size = charinInt(buffer[count]);
+  result = malloc(10 * sizeof(result));
+  puts("je crash3");
+  if(result == NULL){
+    perror("malloc()");
+    exit(EXIT_FAILURE);
+  }
+  count = 0;
+  // On va récupérer tous les indices de parties envoyée par le serveur
+  while(buffer[index] != '*'){
+    // tant que c'est different de / je mets dans temp
+    if(buffer[index] != '/'){
+      temp[count] = buffer[index];
+			count++;
+    }
+    // a chaque fois que je vois un / je mais le buffer dans le tableau
+    if(buffer[index] == '/'){
+      printf("temp lecture : %s\n",temp );
+      result[posArray] = atoi(temp);
+      printf("result[posArray]  : %d\n",result[posArray]  );
+      posArray++;
+			temp[0] = 0;
+			temp[1] = 0;
+      count =0;
+    }
+    index++;
+  }
+  // car je connais pas la taille ça me sert a le lire
+  for(int i = posArray; i<10 ;i++){
+    result[i] = -1;
+  }
+  return result;
     }
 
     int add_client_array (ArrayRoom * array_room,int sock ,char* pseudo){
@@ -457,6 +470,7 @@
       puts("dans la saisie");
       memset(buffer,'\0',sizeof(buffer));
       fgets(buffer,100,stdin);
+      printf("saisie : %s\n",buffer );
     }
     int charinInt (char c) {
       return c - '0';

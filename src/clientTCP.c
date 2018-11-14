@@ -292,7 +292,7 @@ int  connexion(int port)
       printf("1. Mode invite 2.connexion 3.inscription \n");
       saisie(choose);
       puts("saisie effectuer");
-
+    //  printf("chose : %s\n",choose );
       if (choose[0] == '1') {
         observer = is_observer();
         socket_connexion = connexion(port);
@@ -305,25 +305,27 @@ int  connexion(int port)
         saisie_login(pwd, 20,"votre mot de passe : ",1);
         observer = is_observer();
         socket_connexion = connexion(port);
-        if(choose[0] == 2) {
+        printf("choose === = %c\n", choose[0]);
+        if(choose[0] == '3') {
           connexion_client(socket_connexion, pseudo, pwd, observer,2);
           read_serveur(socket_connexion,bufferRecv);
           puts("marche pas555");
           if(charInInt(bufferRecv[0]) != 0) {
             puts("marche pas");
-          return socket_connexion;
+        //  return socket_connexion;
         }
         }
-        else {
+        else if(choose[0] == '2') {
           connexion_client(socket_connexion, pseudo, pwd, observer,1);
           read_serveur(socket_connexion,bufferRecv);
           if(charinInt(bufferRecv[0]) != 0){
+            puts("on sort");
           return socket_connexion;
         }
         }
       }
       else  {
-        printf("Saisie incorrect \n");
+        printf("Saisie incorrect ou connecter vous \n");
         //return 0;
       }
     }
@@ -340,27 +342,7 @@ int  connexion(int port)
     }
     return atoi(buffer);
   }
-  /*  void write_serveur(int socket, char *buffer)
-  {
-  int taille_envoyee;
-  taille_envoyee = send( socket, buffer, strlen(buffer), 0);
-  if (taille_envoyee == -1)
-  {
-  perror("send()");
 
-}
-printf("%d *****-******\n", taille_envoyee);
-}
-
-void read_serveur(int socket, char *buffer)
-{
-ssize_t taille_recue;
-taille_recue = recv(socket, buffer,100,0);
-if (taille_recue == -1){
-perror("recv()");
-}
-printf("%ld *****-******\n", taille_recue);
-}*/
 void wait_observer(int socket){
   int * tab;
   char buffer [100];

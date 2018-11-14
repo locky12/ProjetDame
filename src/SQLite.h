@@ -10,10 +10,10 @@ int read_data (sqlite3 * db, char * requete);
 // crée une nouvelle entrée joueur
 int write_data_player (sqlite3 * db, char * pseudo, char * pwd);
 // retourne le mdp par rapport au pseudo
-char * retrieve_pwd (sqlite3 *db,char * pseudo);
+char * retrieve_pwd (sqlite3 *db,char * pseudo,char *mdp);
 
 int retrieve_pseudo (sqlite3 *db, char * pseudo) ;
-char * controlMDP(sqlite3 *db,char *pseudo);
+char * controlMDP(sqlite3 *db,char * pseudo, char * result);
 /********* TEST ********/
 
 void insert_joueur (sqlite3 *db);

@@ -25,9 +25,9 @@ sqlite3 *ouvrir_db () {
   sqlite3 *db;
   int rc;
   char *zErrMsg = 0;
-  rc = sqlite3_open("BDD.db", &db);
-  cree_table_joueur(db);
-  write_data_player (db, "alice", "destrier");
+  rc = sqlite3_open("BDD1.db", &db);
+
+
 
   if( rc ) {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
@@ -35,6 +35,7 @@ sqlite3 *ouvrir_db () {
   } else {
     fprintf(stderr, "Opened database successfully\n");
   }
+  cree_table_joueur(db);
   return db;
 }
 /* Fonction qui crée la table joueur avec un Id qui s'autoincrement, un pseudo,
@@ -132,23 +133,25 @@ int write_data_player (sqlite3 * db, char * pseudo, char * pwd){
 }
 /* Prend en parametre un pseudo et returne le mot de passe correspondant */
 
-char * controlMDP(sqlite3 *db,char * pseudo){
+char * controlMDP(sqlite3 *db,char * pseudo, char * result){
+  puts("controlMDP");
   char buffer[100];
-  char * result;
+  // char  * result;
   int verif = 0;
-  sprintf(buffer,"%s%s","Select pseudo from Joueur where pseudo = ",pseudo);
+  sprintf(buffer,"%s'%s'","Select pseudo From Joueur where pseudo = ",pseudo);
   verif = read_data(db,buffer);
    printf("verif %d\n",verif );
   if(verif == 1){
-    result = retrieve_pwd(db,pseudo);
+    result = retrieve_pwd(db,pseudo,result);
+    printf("result mdp : %s\n",result );
     return result;
 
   }
-  return "\0";
+ return "\0";
 }
-char * retrieve_pwd (sqlite3 *db,char * pseudo) {
+char * retrieve_pwd (sqlite3 *db,char * pseudo,char *mdp) {
   char * ErrMsg = 0;
-  unsigned char *mdp;
+  //char *mdp;
   int rc;
   int verif = 0;
   char sql[500];
@@ -177,9 +180,13 @@ char * retrieve_pwd (sqlite3 *db,char * pseudo) {
  if (step == SQLITE_ROW) {
      printf("Le mot de passe est : %s\n", sqlite3_column_text(res, 0));
      mdp = (char *)sqlite3_column_text(res, 0);
-return mdp;
+     //sqlite3_reset(res);
+     puts("fin1");
+     return mdp;
  }
 }
+//sqlite3_reset(res);
+ puts("fin");
 return NULL;
 }
 int retrieve_pseudo (sqlite3 *db, char * pseudo) {
