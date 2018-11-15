@@ -13,14 +13,14 @@
 #include <SDL2/SDL.h>
 #include <fcntl.h>
 #include <pthread.h>
-// #include <SDL2/SDL_ttf.h>
 #include "struct.h"
-#include "deplacement.h"
 #include "sdl2.h"
-#include "communication.h"
+#include "jeu_dame.h"
+#include "affichage.h"
 #define TAILLE_SAISIE 500
-pthread_cond_t condition = PTHREAD_COND_INITIALIZER; /* Création de la condition */
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; /* Création du mutex */
+
+
+
 typedef struct in_addr IN_ADDR;
 typedef struct Game Game;
 struct Game {
@@ -33,7 +33,7 @@ struct Game {
   int roundPlayer;
   int deletePion;
   int end;
-  //Damier damier[10][10];
+
 };
 
 
@@ -45,12 +45,10 @@ void * game_play(void * arg);
 Game * init_st_game ( int socket, int numberPlayer);
 void wait_game (int socket);
 void wait_observer(int socket);
-
-
-// void saisie(char *buffer){
-//   memset(buffer,'\0',sizeof(buffer));
-//   fgets(buffer,TAILLE_SAISIE,stdin);
-// }
+/***********************************************************/
+/* La fonction permet de se connecter au serveur avec TCP */
+/*Elle prend en paramêtre le port et retourne une socket */
+/***********************************************************/
 int  connexion(int port)
 {
   char *ip = "127.0.0.1";
@@ -95,7 +93,11 @@ int  connexion(int port)
     , adresse_serveur.sin_port);
     return socket_connexion;
   }
-
+  /******************************************************************/
+  /* Client est la fonction principale elle gère les communications */
+  /*Et la gestion du jeu elle prned en paramêtre un port pour se    */
+  /*Pour se connecter au serveur*************************************/
+  /******************************************************************/
   void client(int port)
   {
     //Message
@@ -134,84 +136,101 @@ int  connexion(int port)
     else {
       wait_observer(socket_connexion);
     }
-      // initialisation du damier
+    if(observer == 1)
+    {
+    printf("init\n");
       init_game(damier);
-      place_tile (damier);
-      //affichermatrice(damier);
+    }
+    else
+    {
+      send_msg(socket_connexion, "OK");
+      recv_msg_server(socket_connexion, buffer_message);
+    printf("non init\n");
 
-      //initialise et cree une fenetre
-      window = init_view ();
-      //initialise et crée un renderer
-      renderer = create_renderer(window);
-      //contient toutes les textures utilisé
-      arrayTexture = create_texture (renderer, arrayTexture);
-      //afficheConnection (renderer);
+      printf("bufferDamier %s\n", buffer_message);
+      bufferDamier(damier, buffer_message);
+      afficheDamier(damier);
 
+    printf("non init\n");
+    }
+    place_tile (damier);
+    //affichermatrice(damier);
 
-      /********************************************************/
-      printf("obser : %d\n",observer );
-      puts("avant co client");
-      //chooseMod (socket_connexion);
-      if (observer == 1) {
-        numberPlayer = number_player (socket_connexion);
-        control = numberPlayer;
-      }
-      /********************************************************/
-
-      game = init_st_game(socket_connexion, numberPlayer);
-      print_damier(renderer, arrayTexture,damier);
-      SDL_RenderPresent(renderer);
-      pthread_create(&thread, NULL, game_play, game);
+    //initialise et cree une fenetre
+    window = init_view ();
+    //initialise et crée un renderer
+    renderer = create_renderer(window);
+    //contient toutes les textures utilisé
+    arrayTexture = create_texture (renderer, arrayTexture);
+    //afficheConnection (renderer);
 
 
-      while (!quit&& inPlay)
+    /********************************************************/
+    printf("obser : %d\n",observer );
+    puts("avant co client");
+    //chooseMod (socket_connexion);
+    if (observer == 1) {
+      numberPlayer = number_player (socket_connexion);
+      control = numberPlayer;
+    }
+    /********************************************************/
+
+    game = init_st_game(socket_connexion, numberPlayer);
+    print_damier(renderer, arrayTexture,damier);
+    SDL_RenderPresent(renderer);
+    pthread_create(&thread, NULL, game_play, game);
+
+
+    while (!quit&& inPlay)
+    {
+      puts("while");
+      // puts("SDL_WaitEvent00");
+      SDL_PollEvent(&event);
+      quit = exit_client (event,quit,socket_connexion);
+      if(game->change == 1)
       {
-        // puts("SDL_WaitEvent00");
-        SDL_PollEvent(&event);
-        quit = exit_client (event,quit,socket_connexion);
-        if(game->change == 1)
-        {
-          //  pthread_mutex_lock (&mutex); /* On verrouille le mutex */
-          changeDamier(damier,game->buffer,numberPlayer);
+        //  pthread_mutex_lock (&mutex); /* On verrouille le mutex */
+        changeDamier(damier,game->buffer,numberPlayer);
 
-          deletePion(damier);
+        deletePion(damier);
+        print_damier(renderer, arrayTexture,damier);
+        SDL_RenderPresent(renderer);
+        game->change =0;
+        if(observer == 1){
+          puts("envoie ok");
+        write_serveur(socket_connexion,"OK");
+      }
+
+      }
+
+      if(game->roundPlayer == 1)
+      {
+        puts("a toi de jouer");
+        controlSend = eventClient(event, renderer, damier, move, socket_connexion,numberPlayer);
+        if(controlSend == 1)
+        {
+          game->roundPlayer = 0;
           print_damier(renderer, arrayTexture,damier);
           SDL_RenderPresent(renderer);
-          game->change =0;
-          if(observer == 1){
-          write_serveur(socket_connexion,"OK");
-        }
-          //pthread_cond_signal (&condition); /* On délivre le signal : condition remplie */
-          // pthread_mutex_unlock (&mutex); /* On déverrouille le mutex */
-        }
-
-        if(game->roundPlayer == 1)
-        {
-          controlSend = eventClient(event, renderer, damier, move, socket_connexion,numberPlayer);
-          if(controlSend == 1)
-          {
-            game->roundPlayer = 0;
-            print_damier(renderer, arrayTexture,damier);
-            SDL_RenderPresent(renderer);
-          }
-
-        }
-        if(game->end == 1){
-          inPlay = 0;
-          game->end = 0;
-
-          printf("socket après fermeture du threads : %d \n",game->socket );
         }
 
       }
+      if(game->end == 1){
+        inPlay = 0;
+        game->end = 0;
 
-        SDL_DestroyRenderer(renderer);
-       SDL_DestroyWindow(window);
-  }
-  freeTexture(arrayTexture);
-  free(move);
-  free(game);
-  close(socket_connexion);
+        printf("socket après fermeture du threads : %d \n",game->socket );
+      }
+
+    }
+
+      SDL_DestroyRenderer(renderer);
+     SDL_DestroyWindow(window);
+}
+freeTexture(arrayTexture);
+free(move);
+free(game);
+close(socket_connexion);
 }
   void * game_play (void * arg) {
     int controlChange;
@@ -220,9 +239,10 @@ int  connexion(int port)
     Game *game = arg;
     int i = 0;
     while(1){
-
+      puts("in thread");
       sprintf(game->buffer,"%s",recv_msg_server(game->socket,buffer));
       controlChange = control_recv_msg(game->buffer);
+      printf("buffer dans le thread : %s\n",game-> buffer );
       //  memset(game->buffer[1],'\0',100);
       i++;
       if(controlChange == 0){

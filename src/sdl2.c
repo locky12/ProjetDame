@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 #include "struct.h"
-#include "deplacement.h"
+#include "jeu_dame.h"
 //#include <SDL2/SDL_ttf.h>
 //#include "deplacement.h"
 #include "sdl2.h"
@@ -471,6 +471,7 @@ char * recv_msg_server (int socket, char * buffer ){
   printf("recv_msg() : %s\n",buffer );
   return buffer;
 }
+
 int control_recv_msg(char * buffer){
   switch (charInInt(buffer[0])) {
     case 3:
@@ -694,7 +695,7 @@ int control_position_pion (Damier damier[10][10], Move *move) {
     void read_serveur(int socket, char *buffer)
     {
       ssize_t taille_recue;
-      taille_recue = recv(socket, buffer,100,0);
+      taille_recue = recv(socket, buffer,200,0);
       printf(" Buffer : read_server %s\n", buffer);
       if (taille_recue == -1){
         perror("recv()");

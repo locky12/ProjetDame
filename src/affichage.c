@@ -1,4 +1,4 @@
-#include "main.h"
+#include "struct.h"
 #include "affichage.h"
 #include <stdio.h>
 

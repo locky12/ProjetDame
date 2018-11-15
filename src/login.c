@@ -9,7 +9,7 @@
 
 
 #include "login.h"
-#include "SQlite.h"
+#include "SQLite.h"
 // int main(void)
 // {
   //

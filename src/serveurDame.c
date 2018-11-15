@@ -12,7 +12,7 @@
 #include <fcntl.h>
 #include "login.h"
 #include "struct.h"
-#include "deplacement.h"
+#include "jeu_dame.h"
 #include "affichage.h"
 //#include "serveurDame.h"
 
@@ -79,26 +79,26 @@ ArrayRoom* init_arrayRoom() {
 
   return array_room;
 }
-void search_array (ArrayRoom *array_room) {
-  int i = 0,
-  j = 0;
-  int size = array_room->sizeArray;
-  int index;
-  for(i = 0; i < 10; i++) {
-    printf("****** le nombre player est : %d ******\n",array_room->array[i].sizePlay );
-    if(array_room->array[i].sizePlay < 2 || (array_room->array[i].sizePlay < 3  && array_room->array[i].haveObserver == 1 )) {
-      printf("****** index insertion est : %d ******\n",i );
-      array_room->indexFree = i;
-      return;
-    }
-
-  }
-  //}
-}
-
-int tri_rooms (ArrayRoom *array_room) {
-
-}
+// void search_array (ArrayRoom *array_room) {
+//   int i = 0,
+//   j = 0;
+//   int size = array_room->sizeArray;
+//   int index;
+//   for(i = 0; i < 10; i++) {
+//     printf("****** le nombre player est : %d ******\n",array_room->array[i].sizePlay );
+//     if(array_room->array[i].sizePlay < 2 || (array_room->array[i].sizePlay < 3  && array_room->array[i].haveObserver == 1 )) {
+//       printf("****** index insertion est : %d ******\n",i );
+//       array_room->indexFree = i;
+//       return;
+//     }
+//
+//   }
+//   //}
+// }
+//
+// int tri_rooms (ArrayRoom *array_room) {
+//
+// }
 
 
 Room * goGame (ArrayRoom * array_room){
@@ -277,12 +277,34 @@ void reset_array_play (ArrayRoom *array_room, Room room) {
   // }
 
 }
+
+// transforme le damier en buffer pour l'envoyer par message
+void damierBuffer(Damier damier[10][10], char * buffer)
+{
+	int ligne;
+	int colonne;
+	sprintf(buffer,"%d/", 4);
+	for(ligne = 0 ; ligne < 10 ; ligne++)
+	{
+		for(colonne = 0 ; colonne < 10 ; colonne++)
+		{
+			sprintf(buffer,"%s%d/", buffer, damier[ligne][colonne].pion);
+
+		}
+	}
+	sprintf(buffer,"%s%c/", buffer, '*');
+  printf(" buffer damier %s\n", buffer);
+}
+
+
+
 /**************************************************************************/
 void * room_play_thread (void * args)
 {
   printf("%s\n","room_play_thread" );
   fd_set rd;
   int control = 1;
+  int observerEntry = 0;
   char buffer[500];
   int socket;
   int size = 2;
@@ -290,8 +312,12 @@ void * room_play_thread (void * args)
   int i, max = room-> socketServer;
   int otherPlayer = 0;
   Damier damier[10][10];
-  initialiseDamier(damier);
   int joueurActuel = 1;
+puts("avant (((((((())))))))");
+
+  initialiseDamier(damier);
+  puts("apres (((((((())))))))");
+  afficheDamier(damier);
   sleep(5);
   send_number_player(room-> play);
   send_round_player(room->play[0].socket);
@@ -300,9 +326,17 @@ void * room_play_thread (void * args)
   do
   {
     sleep(1);
-    if(room->play[2].observer == 2)
+    if(room->play[2].observer == 2 && observerEntry == 0)
     {
+      observerEntry = 1;
       puts("un observateur est entrée");
+      read_player(room->play[2].socket, buffer);
+      puts("read_player");
+      damierBuffer(damier, buffer);
+      puts("damierBuffer");
+      send_player(room->play[2].socket, buffer);
+      puts("send_player");
+      memset(buffer, '\0', strlen(buffer));
       size = 3;
       sleep(1);
     }
@@ -342,11 +376,12 @@ void * room_play_thread (void * args)
           puts("observateur deconnecté");
           deconnect_observer(room);
           size--;
+          observerEntry = 0;
         }
         else
         {
         char ** result = read_move_query(buffer);
-        afficheDamier(damier);
+
         printf("%s\n", buffer);
         printf(" result ******* %d : %d : %d : %d : \n", charInInt(result[0][0]), charInInt(result[0][1]), charInInt(result[1][0]), charInInt(result[1][1]));
         int deplacement = deplacementValide(damier, joueurActuel, charInInt(result[0][0]), charInInt(result[0][1]), charInInt(result[1][0]), charInInt(result[1][1]));
@@ -359,6 +394,7 @@ void * room_play_thread (void * args)
         }
         else
         {
+          printf("deplacement invalide detecte\n");
           //send_all_player(room-> play,room-> play[i].socket,"10",size);
         }
         int prise = canTakePion(damier, joueurActuel, charInInt(result[1][0]), charInInt(result[1][1]));
@@ -377,7 +413,9 @@ void * room_play_thread (void * args)
           printf("otherPlayer ; %d\n",otherPlayer );
           read_player(otherPlayer,buffer);
           memset( buffer, '\0', sizeof( buffer ) );
+          // printf("otherPlayer  %d");
           send_player(otherPlayer,"3");
+          puts("j'envoie 333333");
         }
       }
          // TODO :gerer le cas de l'observateur qui déco
@@ -524,7 +562,7 @@ int accept_player (int socket_ecoute) {
     puts("dans lire données");
     ssize_t		taille_recue;
     memset( buffer, '\0', sizeof( buffer ) );
-    taille_recue = recv( socket_player, buffer, 128, 0);
+    taille_recue = recv( socket_player, buffer, 1000, 0);
     if ( taille_recue == -1 ){
       perror ("recv()" );
       return 0;
@@ -542,7 +580,7 @@ int accept_player (int socket_ecoute) {
   void send_player(int socket_player,char *buffer)
   {
     int taille_envoyee;
-    taille_envoyee = send( socket_player, buffer, strlen(buffer)+1, 0);
+    taille_envoyee = send( socket_player, buffer, strlen(buffer )+1, 0);
     if (taille_envoyee == -1)
     {
       perror("send()");

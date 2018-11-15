@@ -1,9 +1,5 @@
-
-
-
-
-server: login.o serveurDame.o SQLite.o src/deplacement.o src/affichage.o
-	gcc -o server serveurDame.o login.o SQLite.o src/deplacement.o src/affichage.o -lpthread -lsqlite3
+server: login.o serveurDame.o SQLite.o jeu_dame.o affichage.o
+	gcc -o server serveurDame.o login.o SQLite.o jeu_dame.o affichage.o -lpthread -lsqlite3
 
 login.o: src/login.c src/login.h
 	gcc -c -lncurses src/login.c
@@ -20,8 +16,8 @@ SQLite.o: src/SQLite.c src/SQLite.h
 # login.o: src/login.c src/login.h
 	# 	gcc -c -lncurses src/login.c
 
-src/affichage.o: src/affichage.c src/affichage.h src/struct.h
+affichage.o: src/affichage.c src/affichage.h src/struct.h
 	gcc -c src/affichage.c
 
-src/deplacement.o: src/deplacement.c src/deplacement.h src/struct.h
-	gcc -c src/deplacement.c
+jeu_dame.o: src/jeu_dame.c src/jeu_dame.h src/struct.h
+	gcc -c src/jeu_dame.c

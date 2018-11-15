@@ -1,5 +1,4 @@
 
-#include "communication.h"
 
 enum {TEXTURE_PW, TEXTURE_PB, TEXTURE_LW, TEXTURE_LB,TEXTURE_PRIS};
 

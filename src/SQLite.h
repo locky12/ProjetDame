@@ -1,4 +1,4 @@
-#include <sqlite3.h>
+//#include <sqlite3.h>
 /* Prototypes */
 static int callback(void *data, int argc, char **argv, char **azColName);
 //Ouvrir la database
